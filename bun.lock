@@ -7,12 +7,14 @@
       "dependencies": {
         "@supabase/ssr": "^0.10.3",
         "@supabase/supabase-js": "^2.106.1",
+        "@tosspayments/tosspayments-sdk": "^2.7.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-react": "^1.16.0",
         "next": "16.2.6",
         "radix-ui": "^1.4.3",
         "react": "19.2.4",
+        "react-daum-postcode": "^4.0.0",
         "react-dom": "19.2.4",
         "shadcn": "^4.7.0",
         "tailwind-merge": "^3.6.0",
@@ -431,6 +433,8 @@
     "@tailwindcss/oxide-win32-x64-msvc": ["@tailwindcss/oxide-win32-x64-msvc@4.3.0", "", { "os": "win32", "cpu": "x64" }, "sha512-Mvrf2kXW/yeW/OTezZlCGOirXRcUuLIBx/5Y12BaPM7wJoryG6dfS/NJL8aBPqtTEx/Vm4T4vKzFUcKDT+TKUA=="],
 
     "@tailwindcss/postcss": ["@tailwindcss/postcss@4.3.0", "", { "dependencies": { "@alloc/quick-lru": "^5.2.0", "@tailwindcss/node": "4.3.0", "@tailwindcss/oxide": "4.3.0", "postcss": "^8.5.10", "tailwindcss": "4.3.0" } }, "sha512-Jm05Tjx+9yCLGv5qw1c+84Psds8MnyrEQYCB+FFk2lgGiUjlRqdxke4mVTuYrj2xnVZqKim2Apr5ySuQRYAw/w=="],
+
+    "@tosspayments/tosspayments-sdk": ["@tosspayments/tosspayments-sdk@2.7.0", "", {}, "sha512-qpVIMpxdmKNOKwOZuSbkyGO5CpbF3+kqJcHLjGsTdyOsNex8ai+ceQc7zyCJhq+qZf9jglJpx9Q0bGVWwGjcbQ=="],
 
     "@ts-morph/common": ["@ts-morph/common@0.27.0", "", { "dependencies": { "fast-glob": "^3.3.3", "minimatch": "^10.0.1", "path-browserify": "^1.0.1" } }, "sha512-Wf29UqxWDpc+i61k3oIOzcUfQt79PIT9y/MWfAGlrkjg6lBC1hwDECLXPVJAhWjiGbfBCxZd65F/LIZF3+jeJQ=="],
 
@@ -1205,6 +1209,8 @@
     "raw-body": ["raw-body@3.0.2", "", { "dependencies": { "bytes": "~3.1.2", "http-errors": "~2.0.1", "iconv-lite": "~0.7.0", "unpipe": "~1.0.0" } }, "sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA=="],
 
     "react": ["react@19.2.4", "", {}, "sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ=="],
+
+    "react-daum-postcode": ["react-daum-postcode@4.0.0", "", { "peerDependencies": { "react": ">=16.8.0" } }, "sha512-2CGR8Aa/5637IKaplJXv5m9S/qQWWYBr30FhQ9mK9nXiisVbTvrpU9D4U1mgr8YYCKw2RgcK8daN+F+PJhW+ig=="],
 
     "react-dom": ["react-dom@19.2.4", "", { "dependencies": { "scheduler": "^0.27.0" }, "peerDependencies": { "react": "^19.2.4" } }, "sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ=="],
 

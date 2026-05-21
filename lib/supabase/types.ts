@@ -79,6 +79,7 @@ export interface Database {
           display_order?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
       orders: {
         Row: {
@@ -147,6 +148,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       reviews: {
         Row: {
@@ -191,6 +193,7 @@ export interface Database {
           display_order?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
       faqs: {
         Row: {
@@ -220,6 +223,7 @@ export interface Database {
           active?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       newsletter_subscribers: {
         Row: {
@@ -246,6 +250,7 @@ export interface Database {
           unsubscribed_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       instagram_posts: {
         Row: {
@@ -284,6 +289,7 @@ export interface Database {
           active?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
