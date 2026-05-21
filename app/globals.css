@@ -4,15 +4,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   푸르픽 디자인 토큰 (Wild One 톤)
+   - 베이스: 화이트 + 잉크 블랙
+   - 액센트: 머스터드 단일 (CTA · 강조 · 배지에만)
+   ============================================================ */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* 폰트 */
   --font-sans:
     "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
-    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+    "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --font-heading: var(--font-sans);
+
+  /* 푸르픽 컬러 토큰 (Wild One 미니멀) */
+  --color-ink: #0a0a0a;
+  --color-mute-1: #525252;
+  --color-mute-2: #737373;
+  --color-line: #e5e5e5;
+  --color-bg: #ffffff;
+  --color-brand-mustard: #c17a1f;
+  --color-brand-mustard-deep: #8a4e0a;
+
+  /* shadcn 표준 토큰 매핑 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -42,6 +61,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* radius */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -52,82 +73,129 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* shadcn primary = 푸르픽 ink (블랙) — Wild One 톤 */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f5f5f5;
+  --muted-foreground: #525252;
+  --accent: #f5f5f5;
+  --accent-foreground: #0a0a0a;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #737373;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.5rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #737373;
+
+  /* 타이포 스케일 (반응형 clamp) */
+  --text-h1: clamp(2rem, 1.5rem + 2.5vw, 3rem); /* 32 → 48px */
+  --text-h2: clamp(1.5rem, 1.2rem + 1.5vw, 2rem); /* 24 → 32px */
+  --text-h3: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem); /* 20 → 24px */
+  --text-body: 1rem; /* 16px */
+  --text-small: 0.875rem; /* 14px */
+
+  --leading-h1: 1.15;
+  --leading-h2: 1.2;
+  --leading-h3: 1.3;
+  --leading-body: 1.6;
+  --leading-small: 1.5;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* MVP는 라이트 단일. 다크는 향후 옵션. */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #525252;
+  --sidebar: #171717;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #525252;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss03", "kern";
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+
+  /* 타이포 스케일 (semantic HTML 태그 기본값) */
+  h1 {
+    font-size: var(--text-h1);
+    line-height: var(--leading-h1);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-size: var(--text-h2);
+    line-height: var(--leading-h2);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  h3 {
+    font-size: var(--text-h3);
+    line-height: var(--leading-h3);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  small {
+    font-size: var(--text-small);
+    line-height: var(--leading-small);
+  }
+}
+
+@layer components {
+  /* 페이지 컨테이너 — 모든 상위 섹션에서 사용 */
+  .container-page {
+    @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8;
   }
 }
