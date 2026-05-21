@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { ProductCard } from "@/components/shop/ProductCard";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
@@ -10,7 +10,7 @@ type ProductRow = Database["public"]["Tables"]["products"]["Row"];
  * 데이터: Supabase products WHERE active ORDER BY display_order.
  * env 미설정·DB 미연결 환경에서도 안전하도록 try/catch + 빈 배열 폴백.
  *
- * 카피 톤: 스펙 용어 유지 (₩, 본체/담요/쿨매트/깔판/밥그릇).
+ * 카드 시각/구조는 <ProductCard> (shop과 공용)에 위임.
  */
 async function fetchProducts(): Promise<ProductRow[]> {
   try {
@@ -29,15 +29,6 @@ async function fetchProducts(): Promise<ProductRow[]> {
     console.warn("[EditionGrid] supabase unavailable:", (e as Error).message);
     return [];
   }
-}
-
-function summarizeIncludes(includes: ProductRow["includes"]): string {
-  if (!Array.isArray(includes)) return "본체";
-  return (includes as string[]).join(" + ");
-}
-
-function editionLabel(edition: ProductRow["edition"]): string {
-  return edition === "ALL_IN_ONE" ? "ALL-IN-ONE" : "BASIC";
 }
 
 export async function EditionGrid() {
@@ -70,46 +61,14 @@ export async function EditionGrid() {
                   <p className="text-small font-medium uppercase tracking-wider text-brand-mustard">
                     {i < 2 ? "BASIC" : "ALL-IN-ONE"}
                   </p>
-                  <h3 className="mt-1 text-h3 font-semibold">{i % 2 === 0 ? "M" : "L"}</h3>
+                  <h3 className="mt-1 text-h3 font-semibold">
+                    {i % 2 === 0 ? "M" : "L"}
+                  </h3>
                   <p className="mt-2 text-mute-1">데이터 연결 대기 중</p>
                 </div>
               </article>
             ))
-          : products.map((p) => (
-              <Link
-                key={p.id}
-                href={`/shop/${p.id}`}
-                className="group block overflow-hidden rounded-lg border border-line bg-white transition-shadow hover:shadow-md"
-              >
-                <div className="relative aspect-square w-full overflow-hidden bg-zinc-100">
-                  {/* TODO: <Image> 전환 (Stage 14 이미지 파이프라인) */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200">
-                    <span className="text-mute-2 text-small">
-                      {editionLabel(p.edition)} {p.size_class}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <p className="text-small font-medium uppercase tracking-wider text-brand-mustard">
-                    {editionLabel(p.edition)}
-                  </p>
-                  <div className="mt-1 flex items-baseline justify-between gap-2">
-                    <h3 className="text-h3 font-semibold">{p.size_class}</h3>
-                    <span className="text-h3 font-semibold tabular-nums">
-                      ₩{p.price.toLocaleString("ko-KR")}
-                    </span>
-                  </div>
-                  <p className="mt-2 line-clamp-1 text-small text-mute-1">
-                    {summarizeIncludes(p.includes)}
-                  </p>
-                  {p.size_outer && (
-                    <p className="mt-1 text-small text-mute-2">
-                      외부 {p.size_outer}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            ))}
+          : products.map((p) => <ProductCard key={p.id} product={p} />)}
       </div>
     </section>
   );
