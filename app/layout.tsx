@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MiniCartDrawer } from "@/components/layout/MiniCartDrawer";
 import { CookieBanner } from "@/components/layout/CookieBanner";
+import { AnalyticsLoader } from "@/components/analytics/AnalyticsLoader";
 
 export const metadata: Metadata = {
   title: "푸르픽 — 길고양이 보호 셸터",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <Footer />
         <MiniCartDrawer />
         <CookieBanner />
+        <AnalyticsLoader />
       </body>
     </html>
   );
