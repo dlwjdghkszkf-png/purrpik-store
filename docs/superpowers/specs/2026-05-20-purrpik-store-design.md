@@ -1,7 +1,11 @@
-# Purrpik Store — 자사몰 설계 스펙
+# Purrpik Store — 자사몰 설계 스펙 (v1)
+
+> ⚠️ **DEPRECATED 2026-05-21** — Wild One 벤치마크 도입으로 풀 자사몰 구조 전환됨.
+> 최신 스펙: [`2026-05-21-purrpik-store-design-v2.md`](./2026-05-21-purrpik-store-design-v2.md)
+> v1은 단일 LP+체크아웃 가설로 작성됨. v2는 풀 자사몰 (홈/카탈로그/PDP/카트/리뷰/FAQ/브랜드).
 
 - **날짜**: 2026-05-20
-- **상태**: 사용자 리뷰 대기 → writing-plans 이행
+- **상태**: deprecated (v2로 대체)
 - **출처**: brainstorming 세션 (Visual Companion 사용, 6단계 결정 트리)
 
 ---
