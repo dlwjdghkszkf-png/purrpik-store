@@ -1,2 +1,13 @@
-// TODO: implement in Stage 2 — Supabase browser client (client components)
-export {};
+import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "./types";
+
+/**
+ * 클라이언트 컴포넌트용 Supabase 클라이언트.
+ * anon key 사용 — RLS 정책에 따라 접근 제한.
+ */
+export function createClient() {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
