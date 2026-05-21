@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PromoBar } from "@/components/layout/PromoBar";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { MiniCartDrawer } from "@/components/layout/MiniCartDrawer";
+import { CookieBanner } from "@/components/layout/CookieBanner";
 
 export const metadata: Metadata = {
   title: "푸르픽 — 길고양이 보호 셸터",
@@ -27,7 +32,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-bg text-ink">
-        {children}
+        <PromoBar />
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <MiniCartDrawer />
+        <CookieBanner />
       </body>
     </html>
   );

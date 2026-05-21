@@ -1,0 +1,221 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const COL_SHOP = [
+  { label: "전체 상품", href: "/shop" },
+  { label: "BASIC M", href: "/shop/basic-m" },
+  { label: "BASIC L", href: "/shop/basic-l" },
+  { label: "ALL-IN-ONE M", href: "/shop/allinone-m" },
+  { label: "ALL-IN-ONE L", href: "/shop/allinone-l" },
+  { label: "Give Back", href: "/give-back" },
+];
+
+const COL_INFO = [
+  { label: "브랜드 스토리", href: "/about" },
+  { label: "길냥이 돌봄 가이드", href: "/care-guide" },
+  { label: "리뷰", href: "/reviews" },
+  {
+    label: "인스타그램",
+    href: "https://instagram.com/purrpik",
+    external: true,
+  },
+];
+
+const COL_HELP = [
+  { label: "고객 문의", href: "mailto:help@purrpik.co.kr" },
+  { label: "FAQ", href: "/faq" },
+  { label: "배송·교환·환불", href: "/faq#shipping" },
+  { label: "주문 조회", href: "/orders/lookup" },
+];
+
+const LEGAL = [
+  { label: "사업자정보", href: "/business-info" },
+  { label: "개인정보처리방침", href: "/privacy" },
+  { label: "이용약관", href: "/terms" },
+];
+
+export function Footer() {
+  const [email, setEmail] = useState("");
+  const [agreed, setAgreed] = useState(false);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    console.log("TODO: newsletter subscribe", { email, agreed });
+  }
+
+  return (
+    <footer className="border-t border-line bg-white mt-20">
+      <div className="container-page py-12 md:py-16">
+        {/* 3-column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12">
+          <div>
+            <h3 className="text-xs font-bold tracking-widest text-ink uppercase mb-4">
+              Shop
+            </h3>
+            <ul className="space-y-2.5">
+              {COL_SHOP.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="text-sm text-mute-1 hover:text-ink transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-xs font-bold tracking-widest text-ink uppercase mb-4">
+              Info
+            </h3>
+            <ul className="space-y-2.5">
+              {COL_INFO.map((l) => (
+                <li key={l.href}>
+                  {"external" in l && l.external ? (
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-mute-1 hover:text-ink transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={l.href}
+                      className="text-sm text-mute-1 hover:text-ink transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-xs font-bold tracking-widest text-ink uppercase mb-4">
+              Help
+            </h3>
+            <ul className="space-y-2.5">
+              {COL_HELP.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="text-sm text-mute-1 hover:text-ink transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* 뉴스레터 */}
+        <div className="border-t border-line pt-10 mb-10">
+          <div className="max-w-xl">
+            <h3 className="text-xl font-bold text-ink mb-2">Join the Pack</h3>
+            <p className="text-sm text-mute-1 mb-4">
+              신상품, 한정 에디션, 길냥이 돌봄 팁을 가장 먼저 받아보세요.
+            </p>
+            <form
+              action="/api/newsletter/subscribe"
+              method="post"
+              onSubmit={handleSubmit}
+              className="space-y-3"
+            >
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  name="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="이메일 주소"
+                  className="flex-1 h-11"
+                  aria-label="이메일 주소"
+                />
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="lg"
+                  className="h-11 px-6"
+                  disabled={!agreed || !email}
+                >
+                  가입
+                </Button>
+              </div>
+              <label className="flex items-center gap-2 text-xs text-mute-1 cursor-pointer">
+                <Checkbox
+                  checked={agreed}
+                  onCheckedChange={(v) => setAgreed(v === true)}
+                  aria-label="마케팅 수신 동의"
+                />
+                마케팅 정보 수신에 동의합니다 (선택)
+              </label>
+            </form>
+          </div>
+        </div>
+
+        {/* 소셜 + 법적 */}
+        <div className="border-t border-line pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <a
+              href="https://instagram.com/purrpik"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="인스타그램"
+              className="text-mute-1 hover:text-ink transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+            </a>
+          </div>
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {LEGAL.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className="text-xs text-mute-2 hover:text-ink transition-colors"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 사업자정보 + 카피라이트 */}
+        <div className="mt-6 space-y-1">
+          <p className="text-[11px] text-mute-2 leading-relaxed">
+            (주)신성컴퍼니 | 사업자등록번호: 000-00-00000 | 통신판매업신고:
+            제0000-서울00-0000호
+          </p>
+          <p className="text-[11px] text-mute-2">
+            © 2026 푸르픽. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
