@@ -7,6 +7,7 @@ import type { Database } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/products/format";
 import { useCartStore } from "@/lib/cart/store";
+import { trackAddToCart } from "@/lib/analytics";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
@@ -44,8 +45,18 @@ export function AddToCartButton({
     hero_image: product.hero_image ?? "",
   });
 
+  const fireAddToCart = () => {
+    trackAddToCart({
+      item_id: product.id,
+      item_name: product.name,
+      price: product.price,
+      quantity,
+    });
+  };
+
   const handleAdd = () => {
     addItem(buildItem());
+    fireAddToCart();
     setOpen(true);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);
@@ -53,6 +64,7 @@ export function AddToCartButton({
 
   const handleBuyNow = () => {
     addItem(buildItem());
+    fireAddToCart();
     startTransition(() => {
       router.push("/checkout");
     });

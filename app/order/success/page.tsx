@@ -85,7 +85,11 @@ export default async function OrderSuccessPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <SuccessClient orderNo={result.orderNo ?? orderId} amount={amount} />
+      <SuccessClient
+        orderNo={result.orderNo ?? orderId}
+        amount={amount}
+        idempotent={result.idempotent}
+      />
       <main className="container-page py-16 sm:py-20">
         <div className="mx-auto max-w-xl text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">

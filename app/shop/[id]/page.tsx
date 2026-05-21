@@ -11,6 +11,7 @@ import { Layer4Section } from "@/components/pdp/Layer4Section";
 import { ReviewsSection } from "@/components/pdp/ReviewsSection";
 import { FaqSection } from "@/components/pdp/FaqSection";
 import { StickyBuyBar } from "@/components/pdp/StickyBuyBar";
+import { ViewItemTracker } from "@/components/pdp/ViewItemTracker";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
@@ -173,6 +174,9 @@ export default async function ProductPage({
         type="application/ld+json"
         // 자체 데이터 직렬화 — 외부 입력 아님.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
+      <ViewItemTracker
+        product={{ id: product.id, name: product.name, price: product.price }}
       />
 
       <div className="container-page pt-6 pb-24 lg:pb-16">

@@ -16,6 +16,7 @@ import {
   useCartStore,
 } from "@/lib/cart/store";
 import { generateOrderNo } from "@/lib/orderNo";
+import { trackBeginCheckout } from "@/lib/analytics";
 
 const PAGE_TITLE = "결제 — 푸르픽";
 
@@ -41,6 +42,22 @@ export default function CheckoutPage() {
       router.replace("/cart");
     }
   }, [hydrated, items.length, router]);
+
+  // Stage 14: hydration 직후, 카트 아이템 있을 때 begin_checkout 1회 발사.
+  // items 배열 변동으로 재발사되지 않도록 hydrated만 의존.
+  useEffect(() => {
+    if (!hydrated || items.length === 0) return;
+    trackBeginCheckout(
+      items.map((i) => ({
+        item_id: i.productId,
+        item_name: i.name,
+        price: i.price,
+        quantity: i.quantity,
+      })),
+      subtotal,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   if (!hydrated) {
     return (

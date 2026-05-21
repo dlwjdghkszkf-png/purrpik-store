@@ -1,9 +1,10 @@
 /**
  * 디자인 시스템 미리보기 (개발 참고용)
  * — 라우트: /dev/design-system
- * — 프로덕션 노출 차단은 Stage 14 (Vercel basic auth 또는 미들웨어) 시점에 처리
+ * — Stage 14: prod 노출 차단 (NODE_ENV === 'production' → 404).
  */
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,10 @@ const COLORS = [
 ];
 
 export default function DesignSystemPage() {
+  // Stage 14: prod에서는 노출 차단.
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
   return (
     <div className="container-page py-16 space-y-16">
       <header className="space-y-2">
