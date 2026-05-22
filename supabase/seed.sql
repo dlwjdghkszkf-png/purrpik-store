@@ -1,5 +1,7 @@
 -- seed.sql
--- products 4 + faqs 10 + reviews 8 + instagram_posts 12
+-- Stage 18: single master 'purrpik-shelter' + 4 SKU variants (JSONB).
+-- 기존 4 별도 product row는 active=false, is_master=false로 유지(legacy SEO redirect 대응).
+--
 -- Sources:
 --   products: ~/.claude/projects/-Users-ljh/memory/project_purrpik_product_spec.md
 --   faqs:     marketing-agent/.../26_purrpik_detail.html (FAQPage JSON-LD) + 2 new
@@ -9,12 +11,14 @@
 -- Idempotent via ON CONFLICT.
 
 -- ============================================================
--- PRODUCTS (4)
+-- LEGACY PRODUCTS (4) — deactivated, 마이그 0006과 호환.
+-- variants/is_master/price_min/price_max 컬럼이 0006에서 추가됨 → 시드 적용 전제.
 -- ============================================================
 
 insert into products (
   id, name, price, size_outer, size_entry, includes, edition, size_class, pet_type,
-  description_html, hero_image, gallery, active, display_order
+  description_html, hero_image, gallery, active, display_order,
+  is_master, variants, price_min, price_max
 ) values
 (
   'basic-m',
@@ -29,8 +33,7 @@ insert into products (
   '<p>옥스포드 600D + PU 코팅 외피와 알루미늄 포일·EPE 폼·TPU 4중 구조로 비·바람·지면 냉기를 차단합니다. 소형묘·협소 공간에 최적인 M 사이즈, 본체와 극세사 담요 구성.</p>',
   '/images/products/basic-m-hero.jpg',
   '["/images/products/basic-m-1.jpg","/images/products/basic-m-2.jpg","/images/products/basic-m-3.jpg"]'::jsonb,
-  true,
-  0
+  false, 0, false, null, null, null
 ),
 (
   'basic-l',
@@ -45,8 +48,7 @@ insert into products (
   '<p>길냥이는 몸을 펼쳐 자는 경향이라 여유 공간이 필요합니다. 4중 구조 셸터의 L 사이즈, 본체와 극세사 담요 구성으로 1~2마리까지 수용 가능합니다.</p>',
   '/images/products/basic-l-hero.jpg',
   '["/images/products/basic-l-1.jpg","/images/products/basic-l-2.jpg","/images/products/basic-l-3.jpg"]'::jsonb,
-  true,
-  1
+  false, 1, false, null, null, null
 ),
 (
   'allinone-m',
@@ -61,8 +63,7 @@ insert into products (
   '<p>BASIC M 구성에 팔렛트 깔판·쿨매트·밥그릇이 더해진 ALL-IN-ONE M. 장마철 빗물 침투 차단(팔렛트+TPU+PU 3중 방수)과 여름철 바닥 냉각까지 한 번에 해결합니다.</p>',
   '/images/products/allinone-m-hero.jpg',
   '["/images/products/allinone-m-1.jpg","/images/products/allinone-m-2.jpg","/images/products/allinone-m-3.jpg"]'::jsonb,
-  true,
-  2
+  false, 2, false, null, null, null
 ),
 (
   'allinone-l',
@@ -77,8 +78,7 @@ insert into products (
   '<p>실구매자 다수가 선택한 베스트셀러. L 사이즈 본체에 팔렛트 깔판·쿨매트·밥그릇을 모두 포함. BASIC L + 팔렛트 별도 구매 대비 약 10,000원 절약, 쿨매트·밥그릇은 무료로 제공됩니다.</p>',
   '/images/products/allinone-l-hero.jpg',
   '["/images/products/allinone-l-1.jpg","/images/products/allinone-l-2.jpg","/images/products/allinone-l-3.jpg"]'::jsonb,
-  true,
-  3
+  false, 3, false, null, null, null
 )
 on conflict (id) do update set
   name             = excluded.name,
@@ -93,7 +93,68 @@ on conflict (id) do update set
   hero_image       = excluded.hero_image,
   gallery          = excluded.gallery,
   active           = excluded.active,
-  display_order    = excluded.display_order;
+  display_order    = excluded.display_order,
+  is_master        = excluded.is_master,
+  variants         = excluded.variants,
+  price_min        = excluded.price_min,
+  price_max        = excluded.price_max;
+
+-- ============================================================
+-- MASTER PRODUCT (1) — 'purrpik-shelter' + variants (JSONB)
+-- 마이그 0006과 동일 데이터. on conflict do nothing 으로 중복 보호.
+-- ============================================================
+insert into products (
+  id, name, price, size_outer, size_entry,
+  includes, edition, size_class, pet_type,
+  description_html, hero_image, gallery,
+  active, display_order, is_master,
+  variants, price_min, price_max
+) values (
+  'purrpik-shelter',
+  '푸르픽 길고양이집',
+  29900,
+  '40×28×28cm ~ 50×38×38cm',
+  '14×18cm ~ 16×20cm',
+  '["본체","극세사 담요","밥그릇","팔렛트 깔판","쿨매트"]'::jsonb,
+  'BASIC',
+  'M',
+  'cat',
+  '<p>4중 구조(Oxford 600D · AL Foil · EPE Foam 5mm · TPU)로 비·바람·열기·바닥을 동시에 차단하는 길고양이 야외 보호 셸터. 60초 설치, 자체 시험 기준 수직 하중 70kg 변형 0mm, 자외선 99% 차단.</p>',
+  '/images/products/purrpik-shelter-hero.jpg',
+  '["/images/products/purrpik-shelter-1.jpg","/images/products/purrpik-shelter-2.jpg","/images/products/purrpik-shelter-3.jpg"]'::jsonb,
+  true,
+  0,
+  true,
+  '{
+    "axes": [
+      {
+        "id": "edition",
+        "label": "에디션",
+        "options": [
+          {"id":"BASIC","label":"BASIC","sub":"본체 + 담요"},
+          {"id":"ALL_IN_ONE","label":"ALL-IN-ONE","sub":"본체 + 담요 + 밥그릇 + 팔렛트 깔판 + 쿨매트"}
+        ]
+      },
+      {
+        "id": "size",
+        "label": "사이즈",
+        "options": [
+          {"id":"M","label":"M","sub":"40×28×28cm · 입구 14×18cm"},
+          {"id":"L","label":"L","sub":"50×38×38cm · 입구 16×20cm (실구매자 다수)"}
+        ]
+      }
+    ],
+    "skus": [
+      {"id":"basic-m","edition":"BASIC","size":"M","price":29900,"size_outer":"40×28×28cm","size_entry":"14×18cm","includes":["본체","극세사 담요"]},
+      {"id":"basic-l","edition":"BASIC","size":"L","price":34900,"size_outer":"50×38×38cm","size_entry":"16×20cm","includes":["본체","극세사 담요"]},
+      {"id":"allinone-m","edition":"ALL_IN_ONE","size":"M","price":39900,"size_outer":"40×28×28cm","size_entry":"14×18cm","includes":["본체","극세사 담요","밥그릇","팔렛트 깔판","쿨매트"]},
+      {"id":"allinone-l","edition":"ALL_IN_ONE","size":"L","price":44900,"size_outer":"50×38×38cm","size_entry":"16×20cm","includes":["본체","극세사 담요","밥그릇","팔렛트 깔판","쿨매트"]}
+    ]
+  }'::jsonb,
+  29900,
+  44900
+)
+on conflict (id) do nothing;
 
 -- ============================================================
 -- FAQS (10)

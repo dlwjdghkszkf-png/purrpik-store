@@ -17,6 +17,27 @@ export type Json =
 export type ProductEdition = "BASIC" | "ALL_IN_ONE";
 export type ProductSizeClass = "M" | "L";
 export type PetType = "cat" | "dog" | "both";
+
+/**
+ * Stage 18 — master product variants (JSONB).
+ * 2 axes (에디션·사이즈) × 4 SKU.
+ */
+export type ProductVariants = {
+  axes: Array<{
+    id: string;
+    label: string;
+    options: Array<{ id: string; label: string; sub?: string }>;
+  }>;
+  skus: Array<{
+    id: string;
+    edition: string;
+    size: string;
+    price: number;
+    size_outer: string;
+    size_entry: string;
+    includes: string[];
+  }>;
+};
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -48,6 +69,11 @@ export interface Database {
           active: boolean;
           display_order: number;
           created_at: string;
+          // Stage 18 — variants
+          variants: Json | null;
+          is_master: boolean;
+          price_min: number | null;
+          price_max: number | null;
         };
         Insert: {
           id: string;
@@ -65,6 +91,10 @@ export interface Database {
           active?: boolean;
           display_order?: number;
           created_at?: string;
+          variants?: Json | null;
+          is_master?: boolean;
+          price_min?: number | null;
+          price_max?: number | null;
         };
         Update: {
           id?: string;
@@ -82,6 +112,10 @@ export interface Database {
           active?: boolean;
           display_order?: number;
           created_at?: string;
+          variants?: Json | null;
+          is_master?: boolean;
+          price_min?: number | null;
+          price_max?: number | null;
         };
         Relationships: [];
       };
@@ -90,6 +124,7 @@ export interface Database {
           id: string;
           order_no: string;
           product_id: string;
+          variant_id: string | null;
           quantity: number;
           amount: number;
           buyer_name: string;
@@ -112,6 +147,7 @@ export interface Database {
           id?: string;
           order_no: string;
           product_id: string;
+          variant_id?: string | null;
           quantity: number;
           amount: number;
           buyer_name: string;
@@ -134,6 +170,7 @@ export interface Database {
           id?: string;
           order_no?: string;
           product_id?: string;
+          variant_id?: string | null;
           quantity?: number;
           amount?: number;
           buyer_name?: string;
