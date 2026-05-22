@@ -31,14 +31,18 @@ async function fetchProduct(id: string): Promise<ProductRow | null> {
       .select("*")
       .eq("id", id)
       .eq("active", true)
-      .maybeSingle();
+      .limit(1);
     if (error) {
-      console.warn(`[/shop/${id}] product fetch error:`, error.message);
+      console.error(`[/shop/${id}] product fetch error:`, error.message, error.code, error.details);
       return null;
     }
-    return data;
+    if (!data || data.length === 0) {
+      console.error(`[/shop/${id}] product not found in DB (rows=${data?.length ?? 0})`);
+      return null;
+    }
+    return data[0];
   } catch (e) {
-    console.warn(`[/shop/${id}] supabase unavailable:`, (e as Error).message);
+    console.error(`[/shop/${id}] supabase unavailable:`, (e as Error).message);
     return null;
   }
 }
