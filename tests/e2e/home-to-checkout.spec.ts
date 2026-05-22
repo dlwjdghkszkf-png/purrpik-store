@@ -9,8 +9,8 @@
 import { test, expect } from "@playwright/test";
 
 test("홈 → PDP → 카트 담기 → /checkout 진입", async ({ page }) => {
-  // 1) 홈 렌더 확인.
-  await page.goto("/");
+  // 1) v3 — `/`는 게이트, 카테고리 홈(/cat)부터 검증.
+  await page.goto("/cat");
   await expect(page).toHaveTitle(/푸르픽/);
 
   // 2) PDP 직접 진입 (Supabase 없이도 PDP는 fallback 데이터 사용).

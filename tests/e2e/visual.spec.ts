@@ -11,7 +11,11 @@
 import { test, expect } from "@playwright/test";
 
 const PAGES = [
-  { name: "home", path: "/" },
+  // Stage 17 v3: `/`는 게이트, 기존 home 컨텐츠는 `/cat`으로 이전.
+  { name: "gate", path: "/?gate=1" },
+  { name: "cat", path: "/cat" },
+  { name: "dog", path: "/dog" },
+  { name: "both", path: "/both" },
   { name: "shop", path: "/shop" },
   { name: "pdp-basic-m", path: "/shop/basic-m" },
   { name: "cart-empty", path: "/cart" },
