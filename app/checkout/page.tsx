@@ -125,6 +125,7 @@ export default function CheckoutPage() {
                 customerMobilePhone:
                   address.phone.replace(/-/g, "") || undefined,
                 productId: firstItem.productId,
+                variantId: firstItem.variantId ?? null,
                 quantity: firstItem.quantity,
                 ship: {
                   zipcode: address.zipcode,

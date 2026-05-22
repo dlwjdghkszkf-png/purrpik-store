@@ -16,6 +16,8 @@ export interface TossOrderInfo {
   customerEmail?: string;
   customerMobilePhone?: string;
   productId: string;
+  /** Stage 18 — 첫 카트 라인의 SKU id (있을 때만). */
+  variantId?: string | null;
   quantity: number;
   ship: {
     zipcode: string;
@@ -98,6 +100,7 @@ export function TossWidget({ amount, ready, orderInfo }: Props) {
       const created = await createPendingOrder({
         orderId: orderInfo.orderId,
         productId: orderInfo.productId,
+        variantId: orderInfo.variantId ?? null,
         quantity: orderInfo.quantity,
         amount,
         buyer: {

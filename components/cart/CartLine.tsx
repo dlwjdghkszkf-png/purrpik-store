@@ -32,6 +32,11 @@ export function CartLine({ item }: Props) {
         <div className="text-sm font-medium text-ink line-clamp-2">
           {item.name}
         </div>
+        {item.variantId && (
+          <div className="text-[11px] text-mute-2 mt-0.5">
+            옵션 코드 · {item.variantId}
+          </div>
+        )}
         <div className="text-xs text-mute-1 mt-1">
           단가 {formatPrice(item.price)}
         </div>
@@ -45,7 +50,9 @@ export function CartLine({ item }: Props) {
             <button
               type="button"
               aria-label="수량 감소"
-              onClick={() => updateQty(item.productId, item.quantity - 1)}
+              onClick={() =>
+                updateQty(item.productId, item.quantity - 1, item.variantId)
+              }
               className="w-8 h-8 flex items-center justify-center hover:bg-secondary"
             >
               <Minus className="w-3 h-3" />
@@ -59,7 +66,9 @@ export function CartLine({ item }: Props) {
             <button
               type="button"
               aria-label="수량 증가"
-              onClick={() => updateQty(item.productId, item.quantity + 1)}
+              onClick={() =>
+                updateQty(item.productId, item.quantity + 1, item.variantId)
+              }
               className="w-8 h-8 flex items-center justify-center hover:bg-secondary"
             >
               <Plus className="w-3 h-3" />
@@ -69,7 +78,7 @@ export function CartLine({ item }: Props) {
           <button
             type="button"
             aria-label={`${item.name} 삭제`}
-            onClick={() => removeItem(item.productId)}
+            onClick={() => removeItem(item.productId, item.variantId)}
             className="p-1.5 text-mute-1 hover:text-ink transition-colors"
           >
             <Trash2 className="w-4 h-4" />

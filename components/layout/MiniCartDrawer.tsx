@@ -61,7 +61,10 @@ export function MiniCartDrawer() {
             <ScrollArea className="flex-1">
               <ul className="divide-y divide-line">
                 {items.map((it) => (
-                  <li key={it.productId} className="p-4 flex gap-3">
+                  <li
+                    key={`${it.productId}::${it.variantId ?? ""}`}
+                    className="p-4 flex gap-3"
+                  >
                     <div className="w-[50px] h-[50px] shrink-0 bg-secondary rounded-md overflow-hidden flex items-center justify-center text-[10px] text-mute-2">
                       {it.hero_image ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -87,7 +90,11 @@ export function MiniCartDrawer() {
                             type="button"
                             aria-label="수량 감소"
                             onClick={() =>
-                              updateQty(it.productId, it.quantity - 1)
+                              updateQty(
+                                it.productId,
+                                it.quantity - 1,
+                                it.variantId,
+                              )
                             }
                             className="w-7 h-7 flex items-center justify-center hover:bg-secondary"
                           >
@@ -100,7 +107,11 @@ export function MiniCartDrawer() {
                             type="button"
                             aria-label="수량 증가"
                             onClick={() =>
-                              updateQty(it.productId, it.quantity + 1)
+                              updateQty(
+                                it.productId,
+                                it.quantity + 1,
+                                it.variantId,
+                              )
                             }
                             className="w-7 h-7 flex items-center justify-center hover:bg-secondary"
                           >
@@ -110,7 +121,7 @@ export function MiniCartDrawer() {
                         <button
                           type="button"
                           aria-label="삭제"
-                          onClick={() => removeItem(it.productId)}
+                          onClick={() => removeItem(it.productId, it.variantId)}
                           className="p-1 text-mute-1 hover:text-ink"
                         >
                           <Trash2 className="w-4 h-4" />

@@ -5,6 +5,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 export interface CreatePendingOrderInput {
   orderId: string; // toss orderId == 우리 order_no
   productId: string; // 첫 카트 item의 product id (MVP: 단일 product_id 매핑)
+  /** Stage 18 — 첫 카트 item의 variant id (SKU). 단일 product면 null. */
+  variantId?: string | null;
   quantity: number; // 첫 item 수량 (대표값)
   amount: number; // 카트 합계
   buyer: { name: string; phone: string; email: string };
@@ -57,6 +59,7 @@ export async function createPendingOrder(
     const { error } = await supabase.from("orders").insert({
       order_no: input.orderId,
       product_id: input.productId,
+      variant_id: input.variantId ?? null,
       quantity: input.quantity,
       amount: input.amount,
       status: "pending",

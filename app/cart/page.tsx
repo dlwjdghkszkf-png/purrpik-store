@@ -51,7 +51,10 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
             <ul className="divide-y divide-line border-y border-line">
               {items.map((it) => (
-                <CartLine key={it.productId} item={it} />
+                <CartLine
+                  key={`${it.productId}::${it.variantId ?? ""}`}
+                  item={it}
+                />
               ))}
             </ul>
 
