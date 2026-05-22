@@ -3,29 +3,29 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ShoppingBag } from "lucide-react";
-import type { Database } from "@/lib/supabase/types";
+import type { Database, ProductVariants } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
-import { formatPrice } from "@/lib/products/format";
+import { editionLabel, formatPrice } from "@/lib/products/format";
 import { useCartStore } from "@/lib/cart/store";
 import { trackAddToCart } from "@/lib/analytics";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
+type Sku = ProductVariants["skus"][number];
 
 /**
- * AddToCartButton — Zustand cart store에 추가 + MiniCart 드로어 열기 (Client).
+ * AddToCartButton — Stage 18 리팩.
  *
- * - "장바구니에 담기" 클릭 → addItem + setOpen(true)
- * - "바로 결제" 클릭 → addItem + /checkout 이동 (드로어 없이 직행)
- * - 추가 직후 1.5s 동안 success 피드백 표시.
- *
- * 머스타드는 메인 CTA에만. 보조 CTA는 ink outline.
+ * variant SKU 정보를 cart store에 함께 저장. 카트/체크아웃에서 SKU 단위 식별.
+ * selectedSku null이면 비활성화.
  */
 export function AddToCartButton({
   product,
+  selectedSku,
   quantity,
   className,
 }: {
   product: ProductRow;
+  selectedSku: Sku | null;
   quantity: number;
   className?: string;
 }) {
@@ -35,26 +35,37 @@ export function AddToCartButton({
   const [added, setAdded] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const total = product.price * quantity;
+  const unitPrice = selectedSku?.price ?? product.price;
+  const total = unitPrice * quantity;
+  const disabled = !selectedSku || pending;
+
+  const variantLabel = selectedSku
+    ? `${editionLabel(selectedSku.edition)} ${selectedSku.size}`
+    : "";
+  const itemName = selectedSku
+    ? `${product.name} · ${variantLabel}`
+    : product.name;
 
   const buildItem = () => ({
     productId: product.id,
-    name: product.name,
-    price: product.price,
+    variantId: selectedSku?.id,
+    name: itemName,
+    price: unitPrice,
     quantity,
     hero_image: product.hero_image ?? "",
   });
 
   const fireAddToCart = () => {
     trackAddToCart({
-      item_id: product.id,
-      item_name: product.name,
-      price: product.price,
+      item_id: selectedSku?.id ?? product.id,
+      item_name: itemName,
+      price: unitPrice,
       quantity,
     });
   };
 
   const handleAdd = () => {
+    if (!selectedSku) return;
     addItem(buildItem());
     fireAddToCart();
     setOpen(true);
@@ -63,6 +74,7 @@ export function AddToCartButton({
   };
 
   const handleBuyNow = () => {
+    if (!selectedSku) return;
     addItem(buildItem());
     fireAddToCart();
     startTransition(() => {
@@ -76,7 +88,7 @@ export function AddToCartButton({
         type="button"
         variant="mustard"
         onClick={handleAdd}
-        disabled={pending}
+        disabled={disabled}
         className="h-14 w-full text-base"
         aria-live="polite"
       >
@@ -97,7 +109,7 @@ export function AddToCartButton({
         type="button"
         variant="outline"
         onClick={handleBuyNow}
-        disabled={pending}
+        disabled={disabled}
         className="mt-2 h-12 w-full text-base"
       >
         {pending ? "이동 중…" : "바로 결제"}

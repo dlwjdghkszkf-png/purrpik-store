@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { parseVariants } from "@/lib/products/format";
 import { Gallery } from "@/components/pdp/Gallery";
 import { ProductSummary } from "@/components/pdp/ProductSummary";
 import { OptionPicker } from "@/components/pdp/OptionPicker";
@@ -17,13 +18,15 @@ type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
-const VALID_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
+// Stage 18 — 마스터 1개 + 4 legacy SKU id (redirect용).
+const MASTER_ID = "purrpik-shelter";
+const LEGACY_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
+const VALID_MASTER_IDS = [MASTER_ID] as const;
 
 // force-dynamic: cookies() 사용한 createClient 때문에 prerender 시 fail → notFound 캐시되는 문제 회피.
-// PDP 트래픽이 낮아 ISR 손해 미미. P2에서 anon-only client로 분리 후 ISR 재도입.
 export const dynamic = "force-dynamic";
 
-async function fetchProduct(id: string): Promise<ProductRow | null> {
+async function fetchMasterProduct(id: string): Promise<ProductRow | null> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -31,13 +34,21 @@ async function fetchProduct(id: string): Promise<ProductRow | null> {
       .select("*")
       .eq("id", id)
       .eq("active", true)
+      .eq("is_master", true)
       .limit(1);
     if (error) {
-      console.error(`[/shop/${id}] product fetch error:`, error.message, error.code, error.details);
+      console.error(
+        `[/shop/${id}] product fetch error:`,
+        error.message,
+        error.code,
+        error.details,
+      );
       return null;
     }
     if (!data || data.length === 0) {
-      console.error(`[/shop/${id}] product not found in DB (rows=${data?.length ?? 0})`);
+      console.error(
+        `[/shop/${id}] master product not found in DB (rows=${data?.length ?? 0})`,
+      );
       return null;
     }
     return data[0];
@@ -99,7 +110,11 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const product = await fetchProduct(id);
+  // Legacy id면 마스터 메타로 fallback (redirect 전 generateMetadata도 실행됨).
+  const effectiveId = LEGACY_IDS.includes(id as (typeof LEGACY_IDS)[number])
+    ? MASTER_ID
+    : id;
+  const product = await fetchMasterProduct(effectiveId);
   if (!product) {
     return { title: "상품을 찾을 수 없습니다 — 푸르픽" };
   }
@@ -121,17 +136,25 @@ export async function generateMetadata({
 
 export default async function ProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ sku?: string }>;
 }) {
   const { id } = await params;
+  const { sku: skuFromQuery } = await searchParams;
 
-  if (!VALID_IDS.includes(id as (typeof VALID_IDS)[number])) {
+  // Stage 18 — Legacy SKU id면 마스터로 redirect (SEO 보존).
+  if (LEGACY_IDS.includes(id as (typeof LEGACY_IDS)[number])) {
+    redirect(`/shop/${MASTER_ID}?sku=${id}`);
+  }
+
+  if (!VALID_MASTER_IDS.includes(id as (typeof VALID_MASTER_IDS)[number])) {
     notFound();
   }
 
   const [product, reviews, faqs] = await Promise.all([
-    fetchProduct(id),
+    fetchMasterProduct(id),
     fetchReviews(id),
     fetchProductFaqs(),
   ]);
@@ -140,7 +163,16 @@ export default async function ProductPage({
     notFound();
   }
 
-  // JSON-LD: Product + Offer + (선택) AggregateRating
+  const variants = parseVariants(product.variants);
+  // 마스터에 variants 없으면 페이지 의미 X — 데이터 누락 시 404.
+  if (!variants) {
+    console.error(`[/shop/${id}] master product has no variants — abort`);
+    notFound();
+  }
+
+  // JSON-LD: master Product + AggregateOffer (price_min ~ price_max)
+  const priceMin = product.price_min ?? product.price;
+  const priceMax = product.price_max ?? product.price;
   const productLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -150,9 +182,11 @@ export default async function ProductPage({
     image: product.hero_image ? [product.hero_image] : undefined,
     brand: { "@type": "Brand", name: "푸르픽" },
     offers: {
-      "@type": "Offer",
-      price: product.price,
+      "@type": "AggregateOffer",
       priceCurrency: "KRW",
+      lowPrice: priceMin,
+      highPrice: priceMax,
+      offerCount: variants.skus.length,
       availability: "https://schema.org/InStock",
       url: `https://purrpik.com/shop/${product.id}`,
       seller: { "@type": "Organization", name: "신성컴퍼니" },
@@ -168,6 +202,12 @@ export default async function ProductPage({
     };
   }
 
+  // 초기 선택 SKU 결정.
+  const initialSku =
+    (skuFromQuery && variants.skus.find((s) => s.id === skuFromQuery)?.id) ||
+    variants.skus[0]?.id ||
+    "";
+
   return (
     <>
       <script
@@ -176,7 +216,7 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
       />
       <ViewItemTracker
-        product={{ id: product.id, name: product.name, price: product.price }}
+        product={{ id: product.id, name: product.name, price: priceMin }}
       />
 
       <div className="container-page pt-6 pb-24 lg:pb-16">
@@ -196,12 +236,16 @@ export default async function ProductPage({
           <Gallery product={product} />
           <div>
             <ProductSummary product={product} />
-            <OptionPicker product={product} />
+            <OptionPicker
+              product={product}
+              variants={variants}
+              initialSku={initialSku}
+            />
           </div>
         </div>
       </div>
 
-      <SpecTable product={product} />
+      <SpecTable product={product} variants={variants} />
       <Layer4Section />
       <ReviewsSection productId={product.id} reviews={reviews} />
       <FaqSection faqs={faqs} />

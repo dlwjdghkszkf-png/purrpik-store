@@ -1,6 +1,11 @@
 import { Check } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
-import { editionLabel, formatPrice } from "@/lib/products/format";
+import {
+  editionLabel,
+  formatPrice,
+  formatPriceRange,
+  parseVariants,
+} from "@/lib/products/format";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
@@ -14,19 +19,38 @@ const MERITS = [
 /**
  * ProductSummary — PDP 우측 상단 핵심 정보 (RSC).
  *
- * 에디션 라벨(머스타드) · 제품명 · 가격 · 설명 · 메리트 리스트.
- * description_html은 자체 마이그레이션 데이터(신뢰 가능)라 dangerouslySetInnerHTML 사용.
+ * Stage 18: 마스터는 가격 range 표시 + SHELTER 라벨.
+ * 단일 product는 기존 표시 유지.
  */
 export function ProductSummary({ product }: { product: ProductRow }) {
+  const variants = parseVariants(product.variants);
+  const isMaster = product.is_master && variants !== null;
+
+  const topLabel = isMaster
+    ? `SHELTER · ${variants?.skus.length ?? 0} 옵션`
+    : editionLabel(product.edition);
+
+  const priceDisplay = isMaster
+    ? formatPriceRange(
+        product.price_min ?? product.price,
+        product.price_max ?? product.price,
+      )
+    : formatPrice(product.price);
+
   return (
     <div>
       <p className="text-small font-medium uppercase tracking-[0.2em] text-brand-mustard">
-        {editionLabel(product.edition)}
+        {topLabel}
       </p>
       <h1 className="mt-3">{product.name}</h1>
       <p className="mt-4 text-h2 font-semibold tabular-nums text-ink">
-        {formatPrice(product.price)}
+        {priceDisplay}
       </p>
+      {isMaster && (
+        <p className="mt-1 text-small text-mute-2">
+          아래에서 에디션·사이즈를 선택하면 가격이 확정됩니다.
+        </p>
+      )}
 
       {product.description_html && (
         <div
