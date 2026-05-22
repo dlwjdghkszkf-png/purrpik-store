@@ -19,13 +19,9 @@ type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
 const VALID_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
 
-// 24h ISR + SSG (4 페이지 사전 렌더). dynamicParams=true: 빌드시 fetch 실패해도 request 시점 재시도.
-export const revalidate = 86400;
-export const dynamicParams = true;
-
-export function generateStaticParams() {
-  return VALID_IDS.map((id) => ({ id }));
-}
+// force-dynamic: cookies() 사용한 createClient 때문에 prerender 시 fail → notFound 캐시되는 문제 회피.
+// PDP 트래픽이 낮아 ISR 손해 미미. P2에서 anon-only client로 분리 후 ISR 재도입.
+export const dynamic = "force-dynamic";
 
 async function fetchProduct(id: string): Promise<ProductRow | null> {
   try {
