@@ -16,6 +16,7 @@ export type Json =
 
 export type ProductEdition = "BASIC" | "ALL_IN_ONE";
 export type ProductSizeClass = "M" | "L";
+export type PetType = "cat" | "dog" | "both";
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -40,6 +41,7 @@ export interface Database {
           includes: Json;
           edition: ProductEdition;
           size_class: ProductSizeClass;
+          pet_type: PetType;
           description_html: string | null;
           hero_image: string | null;
           gallery: Json | null;
@@ -56,6 +58,7 @@ export interface Database {
           includes: Json;
           edition: ProductEdition;
           size_class: ProductSizeClass;
+          pet_type?: PetType;
           description_html?: string | null;
           hero_image?: string | null;
           gallery?: Json | null;
@@ -72,6 +75,7 @@ export interface Database {
           includes?: Json;
           edition?: ProductEdition;
           size_class?: ProductSizeClass;
+          pet_type?: PetType;
           description_html?: string | null;
           hero_image?: string | null;
           gallery?: Json | null;

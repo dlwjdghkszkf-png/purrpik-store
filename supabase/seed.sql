@@ -13,7 +13,7 @@
 -- ============================================================
 
 insert into products (
-  id, name, price, size_outer, size_entry, includes, edition, size_class,
+  id, name, price, size_outer, size_entry, includes, edition, size_class, pet_type,
   description_html, hero_image, gallery, active, display_order
 ) values
 (
@@ -25,6 +25,7 @@ insert into products (
   '["본체", "극세사 담요"]'::jsonb,
   'BASIC',
   'M',
+  'cat',
   '<p>옥스포드 600D + PU 코팅 외피와 알루미늄 포일·EPE 폼·TPU 4중 구조로 비·바람·지면 냉기를 차단합니다. 소형묘·협소 공간에 최적인 M 사이즈, 본체와 극세사 담요 구성.</p>',
   '/images/products/basic-m-hero.jpg',
   '["/images/products/basic-m-1.jpg","/images/products/basic-m-2.jpg","/images/products/basic-m-3.jpg"]'::jsonb,
@@ -40,6 +41,7 @@ insert into products (
   '["본체", "극세사 담요"]'::jsonb,
   'BASIC',
   'L',
+  'cat',
   '<p>길냥이는 몸을 펼쳐 자는 경향이라 여유 공간이 필요합니다. 4중 구조 셸터의 L 사이즈, 본체와 극세사 담요 구성으로 1~2마리까지 수용 가능합니다.</p>',
   '/images/products/basic-l-hero.jpg',
   '["/images/products/basic-l-1.jpg","/images/products/basic-l-2.jpg","/images/products/basic-l-3.jpg"]'::jsonb,
@@ -55,6 +57,7 @@ insert into products (
   '["본체", "극세사 담요", "밥그릇", "팔렛트 깔판", "쿨매트"]'::jsonb,
   'ALL_IN_ONE',
   'M',
+  'cat',
   '<p>BASIC M 구성에 팔렛트 깔판·쿨매트·밥그릇이 더해진 ALL-IN-ONE M. 장마철 빗물 침투 차단(팔렛트+TPU+PU 3중 방수)과 여름철 바닥 냉각까지 한 번에 해결합니다.</p>',
   '/images/products/allinone-m-hero.jpg',
   '["/images/products/allinone-m-1.jpg","/images/products/allinone-m-2.jpg","/images/products/allinone-m-3.jpg"]'::jsonb,
@@ -70,6 +73,7 @@ insert into products (
   '["본체", "극세사 담요", "밥그릇", "팔렛트 깔판", "쿨매트"]'::jsonb,
   'ALL_IN_ONE',
   'L',
+  'cat',
   '<p>실구매자 다수가 선택한 베스트셀러. L 사이즈 본체에 팔렛트 깔판·쿨매트·밥그릇을 모두 포함. BASIC L + 팔렛트 별도 구매 대비 약 10,000원 절약, 쿨매트·밥그릇은 무료로 제공됩니다.</p>',
   '/images/products/allinone-l-hero.jpg',
   '["/images/products/allinone-l-1.jpg","/images/products/allinone-l-2.jpg","/images/products/allinone-l-3.jpg"]'::jsonb,
@@ -84,6 +88,7 @@ on conflict (id) do update set
   includes         = excluded.includes,
   edition          = excluded.edition,
   size_class       = excluded.size_class,
+  pet_type         = excluded.pet_type,
   description_html = excluded.description_html,
   hero_image       = excluded.hero_image,
   gallery          = excluded.gallery,
