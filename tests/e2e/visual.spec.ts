@@ -12,12 +12,13 @@ import { test, expect } from "@playwright/test";
 
 const PAGES = [
   // Stage 17 v3: `/`는 게이트, 기존 home 컨텐츠는 `/cat`으로 이전.
+  // Stage 18: pdp-basic-m → pdp-purrpik-shelter (단일 마스터).
   { name: "gate", path: "/?gate=1" },
   { name: "cat", path: "/cat" },
   { name: "dog", path: "/dog" },
   { name: "both", path: "/both" },
   { name: "shop", path: "/shop" },
-  { name: "pdp-basic-m", path: "/shop/basic-m" },
+  { name: "pdp-purrpik-shelter", path: "/shop/purrpik-shelter" },
   { name: "cart-empty", path: "/cart" },
   { name: "faq", path: "/faq" },
 ];

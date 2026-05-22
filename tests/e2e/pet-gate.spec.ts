@@ -80,8 +80,8 @@ test.describe("Multi-pet 게이트", () => {
   test("/shop?pet_type=cat → URL 쿼리 유지", async ({ page }) => {
     await page.goto("/shop?pet_type=cat");
     await expect(page).toHaveURL(/pet_type=cat/);
-    // FilterBar 의 "고양이" 토글이 활성화 (aria-pressed=true) 상태.
-    const catFilter = page.getByRole("button", {
+    // Stage 18 — 펫타입 필터는 링크 기반. 활성 링크 aria-pressed=true.
+    const catFilter = page.getByRole("link", {
       name: "고양이",
       exact: true,
     });
