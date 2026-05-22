@@ -6,6 +6,7 @@ import { TestStats } from "@/components/home/TestStats";
 import { ReviewsCarousel } from "@/components/home/ReviewsCarousel";
 import { FaqSection } from "@/components/home/FaqSection";
 import { InstagramFeed } from "@/components/home/InstagramFeed";
+import { Stories } from "@/components/home/Stories";
 import { GiveBack } from "@/components/home/GiveBack";
 
 /**
@@ -41,6 +42,7 @@ export default function CatHome() {
       <ReviewsCarousel />
       <FaqSection />
       <InstagramFeed />
+      <Stories />
       <GiveBack />
     </>
   );

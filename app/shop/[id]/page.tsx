@@ -10,6 +10,7 @@ import { OptionPicker } from "@/components/pdp/OptionPicker";
 import { SpecTable } from "@/components/pdp/SpecTable";
 import { Layer4Section } from "@/components/pdp/Layer4Section";
 import { ReviewsSection } from "@/components/pdp/ReviewsSection";
+import { ReviewsHero } from "@/components/pdp/ReviewsHero";
 import { FaqSection } from "@/components/pdp/FaqSection";
 import { StickyBuyBar } from "@/components/pdp/StickyBuyBar";
 import { ViewItemTracker } from "@/components/pdp/ViewItemTracker";
@@ -232,6 +233,8 @@ export default async function ProductPage({
           <span className="text-ink">{product.name}</span>
         </nav>
 
+        <ReviewsHero productId={product.id} reviews={reviews} />
+
         <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
           <Gallery product={product} />
           <div>
@@ -250,7 +253,7 @@ export default async function ProductPage({
       <ReviewsSection productId={product.id} reviews={reviews} />
       <FaqSection faqs={faqs} />
 
-      <StickyBuyBar product={product} />
+      <StickyBuyBar product={product} initialSku={initialSku} />
     </>
   );
 }

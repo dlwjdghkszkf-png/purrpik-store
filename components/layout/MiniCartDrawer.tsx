@@ -16,6 +16,7 @@ import {
   selectCartSubtotal,
   useCartStore,
 } from "@/lib/cart/store";
+import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 
 function formatKRW(n: number) {
   return new Intl.NumberFormat("ko-KR").format(n) + "원";
@@ -58,6 +59,9 @@ export function MiniCartDrawer() {
           </div>
         ) : (
           <>
+            <div className="px-5 pt-4">
+              <FreeShippingProgress subtotal={subtotal} />
+            </div>
             <ScrollArea className="flex-1">
               <ul className="divide-y divide-line">
                 {items.map((it) => (

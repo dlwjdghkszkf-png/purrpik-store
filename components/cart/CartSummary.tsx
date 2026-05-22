@@ -8,6 +8,7 @@ import {
   useCartStore,
 } from "@/lib/cart/store";
 import { formatPrice } from "@/lib/products/format";
+import { FreeShippingProgress } from "./FreeShippingProgress";
 
 export function CartSummary() {
   const subtotal = useCartStore(selectCartSubtotal);
@@ -18,6 +19,10 @@ export function CartSummary() {
   return (
     <aside className="rounded-lg border border-line bg-white p-6 lg:sticky lg:top-24">
       <h2 className="text-lg font-bold text-ink">주문 요약</h2>
+
+      <div className="mt-4">
+        <FreeShippingProgress subtotal={subtotal} />
+      </div>
 
       <dl className="mt-5 space-y-3 text-sm">
         <div className="flex items-center justify-between">

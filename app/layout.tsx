@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MiniCartDrawer } from "@/components/layout/MiniCartDrawer";
 import { CookieBanner } from "@/components/layout/CookieBanner";
+import { KakaoChannelButton } from "@/components/layout/KakaoChannelButton";
 import { AnalyticsLoader } from "@/components/analytics/AnalyticsLoader";
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default function RootLayout({
         <Footer />
         <MiniCartDrawer />
         <CookieBanner />
+        <KakaoChannelButton />
         <AnalyticsLoader />
       </body>
     </html>
