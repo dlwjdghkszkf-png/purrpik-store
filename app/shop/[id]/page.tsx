@@ -19,9 +19,9 @@ type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
 const VALID_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
 
-// 24h ISR + SSG로 4 페이지 사전 렌더.
+// 24h ISR + SSG (4 페이지 사전 렌더). dynamicParams=true: 빌드시 fetch 실패해도 request 시점 재시도.
 export const revalidate = 86400;
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return VALID_IDS.map((id) => ({ id }));
