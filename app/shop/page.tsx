@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
+import type { Database, PetType } from "@/lib/supabase/types";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { FilterBar } from "@/components/shop/FilterBar";
 
@@ -12,7 +12,7 @@ type EditionFilter = "BASIC" | "ALL_IN_ONE";
 export const metadata: Metadata = {
   title: "전체 상품 — 푸르픽",
   description:
-    "푸르픽 길고양이집 4종 — BASIC M/L · ALL-IN-ONE M/L. 사이즈와 구성으로 선택하세요.",
+    "푸르픽 4중 구조 셸터 — 고양이·강아지·둘 다. 반려동물·사이즈·구성으로 선택하세요.",
 };
 
 // 24h ISR — 카탈로그는 일 단위로만 변경.
@@ -21,6 +21,7 @@ export const revalidate = 86400;
 interface ShopSearchParams {
   size?: SizeFilter;
   edition?: EditionFilter;
+  pet_type?: PetType;
 }
 
 async function fetchProducts(
@@ -40,6 +41,13 @@ async function fetchProducts(
     if (filters.edition === "BASIC" || filters.edition === "ALL_IN_ONE") {
       query = query.eq("edition", filters.edition);
     }
+    if (
+      filters.pet_type === "cat" ||
+      filters.pet_type === "dog" ||
+      filters.pet_type === "both"
+    ) {
+      query = query.eq("pet_type", filters.pet_type);
+    }
 
     const { data, error } = await query;
     if (error) {
@@ -53,20 +61,43 @@ async function fetchProducts(
   }
 }
 
+function emptyMessage(
+  petType: PetType | undefined,
+  hasOtherFilter: boolean
+): string {
+  if (petType === "dog") {
+    return "강아지 신상품이 곧 출시됩니다.";
+  }
+  if (petType === "both") {
+    return "강아지·고양이 호환 제품이 곧 출시됩니다.";
+  }
+  if (hasOtherFilter) {
+    return "조건에 맞는 상품이 없습니다.";
+  }
+  return "등록된 상품이 없습니다.";
+}
+
 export default async function ShopPage({
   searchParams,
 }: {
   searchParams: Promise<ShopSearchParams>;
 }) {
   const params = await searchParams;
-  const size = params.size === "M" || params.size === "L" ? params.size : undefined;
+  const size =
+    params.size === "M" || params.size === "L" ? params.size : undefined;
   const edition =
     params.edition === "BASIC" || params.edition === "ALL_IN_ONE"
       ? params.edition
       : undefined;
+  const pet_type =
+    params.pet_type === "cat" ||
+    params.pet_type === "dog" ||
+    params.pet_type === "both"
+      ? params.pet_type
+      : undefined;
 
-  const products = await fetchProducts({ size, edition });
-  const hasFilter = Boolean(size || edition);
+  const products = await fetchProducts({ size, edition, pet_type });
+  const hasFilter = Boolean(size || edition || pet_type);
 
   return (
     <>
@@ -80,7 +111,7 @@ export default async function ShopPage({
         </nav>
         <h1 className="mt-3">전체 상품</h1>
         <p className="mt-3 text-mute-1">
-          4중 구조 길고양이 야외 보호 셸터 — 사이즈와 구성으로 선택
+          4중 구조 야외 보호 셸터 — 반려동물·사이즈·구성으로 선택
         </p>
       </header>
 
@@ -94,11 +125,7 @@ export default async function ShopPage({
       <section className="container-page py-6 pb-20">
         {products.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-white py-20 text-center">
-            <p className="text-mute-1">
-              {hasFilter
-                ? "조건에 맞는 상품이 없습니다."
-                : "등록된 상품이 없습니다."}
-            </p>
+            <p className="text-mute-1">{emptyMessage(pet_type, hasFilter)}</p>
             {hasFilter && (
               <Link
                 href="/shop"

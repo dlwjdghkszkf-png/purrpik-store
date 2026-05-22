@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 type SizeFilter = "M" | "L";
 type EditionFilter = "BASIC" | "ALL_IN_ONE";
+type PetTypeFilter = "cat" | "dog" | "both";
 
 const SIZE_OPTIONS: { value: SizeFilter | "ALL"; label: string }[] = [
   { value: "ALL", label: "전체" },
@@ -20,10 +21,17 @@ const EDITION_OPTIONS: { value: EditionFilter | "ALL"; label: string }[] = [
   { value: "ALL_IN_ONE", label: "ALL-IN-ONE" },
 ];
 
+const PET_TYPE_OPTIONS: { value: PetTypeFilter | "ALL"; label: string }[] = [
+  { value: "ALL", label: "전체" },
+  { value: "cat", label: "고양이" },
+  { value: "dog", label: "강아지" },
+  { value: "both", label: "둘 다" },
+];
+
 /**
- * FilterBar — /shop 카탈로그 사이즈/에디션 필터.
+ * FilterBar — /shop 카탈로그 펫타입/사이즈/에디션 필터.
  *
- * URL searchParams (?size=M&edition=BASIC)에 상태 반영 → 서버 RSC가 다시 fetch.
+ * URL searchParams (?pet_type=cat&size=M&edition=BASIC)에 상태 반영 → 서버 RSC가 다시 fetch.
  * 활성 필터는 default(black fill), 비활성은 outline.
  */
 export function FilterBar() {
@@ -34,11 +42,16 @@ export function FilterBar() {
   const currentSize = (searchParams.get("size") as SizeFilter | null) ?? "ALL";
   const currentEdition =
     (searchParams.get("edition") as EditionFilter | null) ?? "ALL";
+  const currentPetType =
+    (searchParams.get("pet_type") as PetTypeFilter | null) ?? "ALL";
 
-  const hasActiveFilter = currentSize !== "ALL" || currentEdition !== "ALL";
+  const hasActiveFilter =
+    currentSize !== "ALL" ||
+    currentEdition !== "ALL" ||
+    currentPetType !== "ALL";
 
   const update = useCallback(
-    (key: "size" | "edition", value: string) => {
+    (key: "size" | "edition" | "pet_type", value: string) => {
       const next = new URLSearchParams(searchParams.toString());
       if (value === "ALL") {
         next.delete(key);
@@ -59,13 +72,20 @@ export function FilterBar() {
     () => ({
       size: (v: string) => v === currentSize,
       edition: (v: string) => v === currentEdition,
+      pet_type: (v: string) => v === currentPetType,
     }),
-    [currentSize, currentEdition]
+    [currentSize, currentEdition, currentPetType]
   );
 
   return (
     <div className="flex flex-col gap-4 border-y border-line py-5 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-8">
+        <FilterGroup
+          label="반려동물"
+          options={PET_TYPE_OPTIONS}
+          isActive={isActive.pet_type}
+          onSelect={(v) => update("pet_type", v)}
+        />
         <FilterGroup
           label="사이즈"
           options={SIZE_OPTIONS}

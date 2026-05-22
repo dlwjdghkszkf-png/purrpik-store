@@ -1,40 +1,34 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { VideoHero } from "@/components/home/VideoHero";
-import { EditionGrid } from "@/components/home/EditionGrid";
-import { Layer4 } from "@/components/home/Layer4";
-import { TestStats } from "@/components/home/TestStats";
-import { ReviewsCarousel } from "@/components/home/ReviewsCarousel";
-import { FaqSection } from "@/components/home/FaqSection";
-import { InstagramFeed } from "@/components/home/InstagramFeed";
-import { GiveBack } from "@/components/home/GiveBack";
+import { PetGate } from "@/components/gate/PetGate";
+
+/**
+ * Stage 17 v3 — 루트 게이트 페이지.
+ *
+ * - 신규 진입(localStorage 없음) → 3 카드 게이트 표시
+ * - 기존 선택 있음(localStorage hit) → useEffect에서 자동 `/${petType}` redirect
+ * - `?gate=1` 강제 진입 시 redirect 스킵하고 게이트 노출
+ *
+ * 기존 홈(VideoHero 등)은 `/cat`으로 이전됨.
+ */
 
 export const metadata: Metadata = {
-  title: "푸르픽 — 길고양이 보호 셸터 | 4중 구조 야외 셸터",
+  title: "푸르픽 — 반려동물 보호 셸터",
   description:
-    "옥스포드 600D · TPU · EPE Foam · AL Foil 4중 레이어로 비·바람·열기를 막는 길고양이 보호 셸터. 60초 설치, 70kg 하중. 무료배송.",
+    "고양이·강아지 모두를 위한 푸르픽. 반려동물을 선택하고 카테고리별 큐레이션을 확인하세요.",
   openGraph: {
-    title: "푸르픽 — 길고양이 보호 셸터 | 4중 구조 야외 셸터",
+    title: "푸르픽 — 반려동물 보호 셸터",
     description:
-      "옥스포드 600D · TPU · EPE Foam · AL Foil 4중 레이어로 비·바람·열기를 막는 길고양이 보호 셸터. 60초 설치, 70kg 하중. 무료배송.",
+      "고양이·강아지 모두를 위한 푸르픽. 반려동물을 선택하고 카테고리별 큐레이션을 확인하세요.",
     type: "website",
     locale: "ko_KR",
   },
 };
 
-// 24h ISR — 제품·FAQ·리뷰는 일 단위로만 변경.
-export const revalidate = 86400;
-
-export default function Home() {
+export default function GatePage() {
   return (
-    <>
-      <VideoHero />
-      <EditionGrid />
-      <Layer4 />
-      <TestStats />
-      <ReviewsCarousel />
-      <FaqSection />
-      <InstagramFeed />
-      <GiveBack />
-    </>
+    <Suspense fallback={<div className="min-h-[80vh]" aria-hidden="true" />}>
+      <PetGate />
+    </Suspense>
   );
 }

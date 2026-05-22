@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Cat, Dog, PawPrint, type LucideIcon } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,10 +11,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-type NavItem = { label: string; href: string };
+type NavItem = { label: string; href: string; hasMega?: boolean };
 
 const NAV: NavItem[] = [
-  { label: "Shelter", href: "/shop" },
+  { label: "Shop", href: "/shop", hasMega: true },
   { label: "Reviews", href: "/reviews" },
   { label: "Care Guide", href: "/care-guide" },
   { label: "About", href: "/about" },
@@ -25,6 +25,46 @@ const SHELTER_EDITIONS = [
   { id: "basic-l", label: "BASIC L", desc: "두 마리까지 베이직" },
   { id: "allinone-m", label: "ALL-IN-ONE M", desc: "패드 포함 풀세트" },
   { id: "allinone-l", label: "ALL-IN-ONE L", desc: "풀세트 라지" },
+];
+
+type PetPanelItem = {
+  type: "cat" | "dog" | "both";
+  title: string;
+  desc: string;
+  href: string;
+  ctaLabel: string;
+  ctaHref: string;
+  icon: LucideIcon;
+};
+
+const PET_PANELS: PetPanelItem[] = [
+  {
+    type: "cat",
+    title: "고양이",
+    desc: "4중 구조 야외 셸터 4 에디션",
+    href: "/cat",
+    ctaLabel: "고양이 전체",
+    ctaHref: "/cat",
+    icon: Cat,
+  },
+  {
+    type: "dog",
+    title: "강아지",
+    desc: "신상품 준비 중",
+    href: "/dog",
+    ctaLabel: "알림 받기",
+    ctaHref: "/dog",
+    icon: Dog,
+  },
+  {
+    type: "both",
+    title: "둘 다",
+    desc: "호환 부속 제품",
+    href: "/both",
+    ctaLabel: "둘 다 보기",
+    ctaHref: "/both",
+    icon: PawPrint,
+  },
 ];
 
 export function MegaMenu() {
@@ -59,8 +99,27 @@ export function MegaMenu() {
                   {item.label}
                 </Link>
               ))}
+
               <div className="mt-2 px-4 py-2 text-xs font-semibold tracking-widest text-mute-1 uppercase">
-                By Edition
+                By Pet
+              </div>
+              {PET_PANELS.map((p) => (
+                <Link
+                  key={p.type}
+                  href={p.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-2 text-sm text-mute-1 hover:text-ink transition-colors flex items-center gap-2"
+                >
+                  <p.icon className="w-4 h-4 text-brand-mustard" aria-hidden="true" />
+                  {p.title}
+                  <span className="block text-[11px] text-mute-2">
+                    — {p.desc}
+                  </span>
+                </Link>
+              ))}
+
+              <div className="mt-2 px-4 py-2 text-xs font-semibold tracking-widest text-mute-1 uppercase">
+                Cat — Editions
               </div>
               {SHELTER_EDITIONS.map((ed) => (
                 <Link
@@ -75,6 +134,16 @@ export function MegaMenu() {
                   </span>
                 </Link>
               ))}
+
+              <div className="mt-3 px-4 py-2 border-t border-line">
+                <Link
+                  href="/?gate=1"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-xs text-mute-2 hover:text-ink transition-colors underline underline-offset-4"
+                >
+                  반려동물 다시 선택하기
+                </Link>
+              </div>
             </nav>
           </SheetContent>
         </Sheet>
@@ -105,53 +174,56 @@ export function MegaMenu() {
           </div>
         ))}
 
-        {/* Shelter mega panel */}
-        {hovered === "Shelter" && (
+        {/* Shop mega panel — 3 카테고리 (cat / dog / both) */}
+        {hovered === "Shop" && (
           <div
             className="absolute left-0 right-0 top-full bg-white border-b border-line shadow-lg z-40"
-            onMouseEnter={() => setHovered("Shelter")}
+            onMouseEnter={() => setHovered("Shop")}
           >
             <div className="container-page py-8 grid grid-cols-12 gap-8">
-              <div className="col-span-7">
-                <div className="text-xs font-semibold tracking-widest text-mute-1 uppercase mb-4">
-                  By Edition
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {SHELTER_EDITIONS.map((ed) => (
-                    <Link
-                      key={ed.id}
-                      href={`/shop/${ed.id}`}
-                      className="group block p-3 -m-3 rounded-md hover:bg-secondary transition-colors"
-                    >
-                      <div className="text-base font-semibold text-ink group-hover:text-brand-mustard">
-                        {ed.label}
-                      </div>
-                      <div className="text-sm text-mute-1 mt-0.5">
-                        {ed.desc}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <div className="col-span-5 border-l border-line pl-8">
-                <div className="text-xs font-semibold tracking-widest text-mute-1 uppercase mb-4">
-                  Featured
-                </div>
-                <Link
-                  href="/shop/allinone-l"
-                  className="group block"
-                >
-                  <div className="w-40 h-30 bg-secondary rounded-md mb-3 overflow-hidden flex items-center justify-center text-xs text-mute-2">
-                    ALL-IN-ONE L
+              {PET_PANELS.map((p) => (
+                <div key={p.type} className="col-span-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <p.icon
+                      className="w-5 h-5 text-brand-mustard"
+                      aria-hidden="true"
+                    />
+                    <div className="text-xs font-semibold tracking-widest text-mute-1 uppercase">
+                      {p.title}
+                    </div>
                   </div>
-                  <div className="text-sm font-semibold text-ink">
-                    실구매자 다수 선택
-                  </div>
-                  <div className="text-sm text-brand-mustard mt-1 group-hover:underline">
-                    지금 보기 →
-                  </div>
-                </Link>
-              </div>
+
+                  {p.type === "cat" ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {SHELTER_EDITIONS.map((ed) => (
+                        <Link
+                          key={ed.id}
+                          href={`/shop/${ed.id}`}
+                          className="group block p-2 -m-2 rounded-md hover:bg-secondary transition-colors"
+                        >
+                          <div className="text-sm font-semibold text-ink group-hover:text-brand-mustard">
+                            {ed.label}
+                          </div>
+                          <div className="text-xs text-mute-1 mt-0.5">
+                            {ed.desc}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-mute-1 leading-relaxed">
+                      {p.desc}
+                    </p>
+                  )}
+
+                  <Link
+                    href={p.ctaHref}
+                    className="mt-4 inline-block text-sm font-medium text-brand-mustard hover:underline underline-offset-4"
+                  >
+                    {p.ctaLabel} →
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
         )}

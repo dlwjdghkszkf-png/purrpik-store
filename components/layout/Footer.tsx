@@ -8,6 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const COL_SHOP = [
   { label: "전체 상품", href: "/shop" },
+  { label: "고양이", href: "/cat" },
+  { label: "강아지", href: "/dog" },
+  { label: "강아지·고양이 둘 다", href: "/both" },
   { label: "BASIC M", href: "/shop/basic-m" },
   { label: "BASIC L", href: "/shop/basic-l" },
   { label: "ALL-IN-ONE M", href: "/shop/allinone-m" },
@@ -31,6 +34,7 @@ const COL_HELP = [
   { label: "FAQ", href: "/faq" },
   { label: "배송·교환·환불", href: "/faq#shipping" },
   { label: "주문 조회", href: "/orders/lookup" },
+  { label: "반려동물 다시 선택", href: "/?gate=1" },
 ];
 
 const LEGAL = [
