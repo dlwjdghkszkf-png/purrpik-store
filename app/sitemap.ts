@@ -1,7 +1,7 @@
 /**
- * Stage 16 — sitemap.xml.
+ * Stage 16 → Stage 18 — sitemap.xml.
  *
- * 정적 라우트 + 4 에디션 PDP. 동적 생성 — Next.js metadata route.
+ * 정적 라우트 + 마스터 PDP 1 + 4 SKU 사전선택 URL. 동적 생성 — Next.js metadata route.
  * /order/* /orders/lookup /api/* /dev/* 는 robots.ts에서 disallow.
  */
 
@@ -9,7 +9,8 @@ import type { MetadataRoute } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
 
-const PRODUCT_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
+const MASTER_ID = "purrpik-shelter";
+const SKU_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -27,12 +28,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/give-back`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
   ];
 
-  const productRoutes: MetadataRoute.Sitemap = PRODUCT_IDS.map((id) => ({
-    url: `${BASE_URL}/shop/${id}`,
+  // 마스터 PDP 1개 (최우선) + 각 SKU 사전선택 URL 4개.
+  const masterRoute: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/shop/${MASTER_ID}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+  ];
+  const skuRoutes: MetadataRoute.Sitemap = SKU_IDS.map((sku) => ({
+    url: `${BASE_URL}/shop/${MASTER_ID}?sku=${sku}`,
     lastModified: now,
     changeFrequency: "weekly",
-    priority: 0.8,
+    priority: 0.7,
   }));
 
-  return [...staticRoutes, ...productRoutes];
+  return [...staticRoutes, ...masterRoute, ...skuRoutes];
 }

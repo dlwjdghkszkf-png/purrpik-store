@@ -3,11 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Database, PetType } from "@/lib/supabase/types";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { FilterBar } from "@/components/shop/FilterBar";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
-type SizeFilter = "M" | "L";
-type EditionFilter = "BASIC" | "ALL_IN_ONE";
 
 export const metadata: Metadata = {
   title: "전체 상품 — 푸르픽",
@@ -19,13 +16,16 @@ export const metadata: Metadata = {
 export const revalidate = 86400;
 
 interface ShopSearchParams {
-  size?: SizeFilter;
-  edition?: EditionFilter;
   pet_type?: PetType;
 }
 
-async function fetchProducts(
-  filters: ShopSearchParams
+/**
+ * Stage 18 — 카탈로그는 마스터 product만 표시.
+ * 4 SKU 옵션 선택은 PDP `/shop/purrpik-shelter`의 OptionPicker에서.
+ * 카테고리(pet_type) 필터만 유지. size/edition 필터는 마스터 1개 화면이라 의미 없어 제거.
+ */
+async function fetchMasterProducts(
+  filters: ShopSearchParams,
 ): Promise<ProductRow[]> {
   try {
     const supabase = await createClient();
@@ -33,14 +33,9 @@ async function fetchProducts(
       .from("products")
       .select("*")
       .eq("active", true)
+      .eq("is_master", true)
       .order("display_order", { ascending: true });
 
-    if (filters.size === "M" || filters.size === "L") {
-      query = query.eq("size_class", filters.size);
-    }
-    if (filters.edition === "BASIC" || filters.edition === "ALL_IN_ONE") {
-      query = query.eq("edition", filters.edition);
-    }
     if (
       filters.pet_type === "cat" ||
       filters.pet_type === "dog" ||
@@ -61,18 +56,12 @@ async function fetchProducts(
   }
 }
 
-function emptyMessage(
-  petType: PetType | undefined,
-  hasOtherFilter: boolean
-): string {
+function emptyMessage(petType: PetType | undefined): string {
   if (petType === "dog") {
     return "강아지 신상품이 곧 출시됩니다.";
   }
   if (petType === "both") {
     return "강아지·고양이 호환 제품이 곧 출시됩니다.";
-  }
-  if (hasOtherFilter) {
-    return "조건에 맞는 상품이 없습니다.";
   }
   return "등록된 상품이 없습니다.";
 }
@@ -83,12 +72,6 @@ export default async function ShopPage({
   searchParams: Promise<ShopSearchParams>;
 }) {
   const params = await searchParams;
-  const size =
-    params.size === "M" || params.size === "L" ? params.size : undefined;
-  const edition =
-    params.edition === "BASIC" || params.edition === "ALL_IN_ONE"
-      ? params.edition
-      : undefined;
   const pet_type =
     params.pet_type === "cat" ||
     params.pet_type === "dog" ||
@@ -96,8 +79,8 @@ export default async function ShopPage({
       ? params.pet_type
       : undefined;
 
-  const products = await fetchProducts({ size, edition, pet_type });
-  const hasFilter = Boolean(size || edition || pet_type);
+  const products = await fetchMasterProducts({ pet_type });
+  const hasFilter = Boolean(pet_type);
 
   return (
     <>
@@ -111,12 +94,37 @@ export default async function ShopPage({
         </nav>
         <h1 className="mt-3">전체 상품</h1>
         <p className="mt-3 text-mute-1">
-          4중 구조 야외 보호 셸터 — 반려동물·사이즈·구성으로 선택
+          4중 구조 야외 보호 셸터 — 클릭 후 에디션·사이즈를 선택하세요
         </p>
       </header>
 
       <div className="container-page">
-        <FilterBar />
+        <div className="flex flex-wrap items-center gap-2 border-y border-line py-5 text-small">
+          <span className="font-medium text-mute-1">반려동물</span>
+          {[
+            { value: undefined, label: "전체" },
+            { value: "cat" as const, label: "고양이" },
+            { value: "dog" as const, label: "강아지" },
+            { value: "both" as const, label: "둘 다" },
+          ].map((opt) => {
+            const active = pet_type === opt.value;
+            const href = opt.value ? `/shop?pet_type=${opt.value}` : "/shop";
+            return (
+              <Link
+                key={opt.label}
+                href={href}
+                aria-pressed={active}
+                className={`rounded-md border px-3 py-1.5 transition-colors ${
+                  active
+                    ? "border-ink bg-ink text-white"
+                    : "border-line text-mute-1 hover:border-ink hover:text-ink"
+                }`}
+              >
+                {opt.label}
+              </Link>
+            );
+          })}
+        </div>
         <p className="mt-5 text-small text-mute-1">
           총 {products.length}개 상품
         </p>
@@ -125,7 +133,7 @@ export default async function ShopPage({
       <section className="container-page py-6 pb-20">
         {products.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-white py-20 text-center">
-            <p className="text-mute-1">{emptyMessage(pet_type, hasFilter)}</p>
+            <p className="text-mute-1">{emptyMessage(pet_type)}</p>
             {hasFilter && (
               <Link
                 href="/shop"

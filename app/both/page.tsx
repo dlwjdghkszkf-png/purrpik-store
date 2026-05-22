@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 86400;
 
+// Stage 18 — 마스터만. 'both' pet_type 마스터가 추가되면 표시.
 async function fetchBothProducts(): Promise<ProductRow[]> {
   try {
     const supabase = await createClient();
@@ -29,6 +30,7 @@ async function fetchBothProducts(): Promise<ProductRow[]> {
       .from("products")
       .select("*")
       .eq("active", true)
+      .eq("is_master", true)
       .eq("pet_type", "both")
       .order("display_order", { ascending: true });
     if (error) {

@@ -120,7 +120,7 @@ export default function CareGuidePage() {
                 일반 스티로폼 박스나 단겹 텐트는 단열재가 없거나 외장이 약해
                 한 계절을 넘기기 어렵습니다.{" "}
                 <Link
-                  href="/shop/allinone-l"
+                  href="/shop/purrpik-shelter?sku=allinone-l"
                   className="text-brand-mustard underline underline-offset-2 hover:text-brand-mustard-deep"
                 >
                   푸르픽 ALL-IN-ONE L

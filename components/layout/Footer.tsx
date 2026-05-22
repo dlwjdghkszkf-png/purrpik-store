@@ -11,10 +11,11 @@ const COL_SHOP = [
   { label: "고양이", href: "/cat" },
   { label: "강아지", href: "/dog" },
   { label: "강아지·고양이 둘 다", href: "/both" },
-  { label: "BASIC M", href: "/shop/basic-m" },
-  { label: "BASIC L", href: "/shop/basic-l" },
-  { label: "ALL-IN-ONE M", href: "/shop/allinone-m" },
-  { label: "ALL-IN-ONE L", href: "/shop/allinone-l" },
+  { label: "푸르픽 길고양이집", href: "/shop/purrpik-shelter" },
+  { label: "BASIC M", href: "/shop/purrpik-shelter?sku=basic-m" },
+  { label: "BASIC L", href: "/shop/purrpik-shelter?sku=basic-l" },
+  { label: "ALL-IN-ONE M", href: "/shop/purrpik-shelter?sku=allinone-m" },
+  { label: "ALL-IN-ONE L", href: "/shop/purrpik-shelter?sku=allinone-l" },
   { label: "Give Back", href: "/give-back" },
 ];
 

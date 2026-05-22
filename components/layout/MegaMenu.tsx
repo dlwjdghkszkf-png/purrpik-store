@@ -20,6 +20,9 @@ const NAV: NavItem[] = [
   { label: "About", href: "/about" },
 ];
 
+// Stage 18 — 단일 마스터 product `purrpik-shelter` + SKU 4종.
+// 메가 메뉴 미니카드는 `/shop/purrpik-shelter?sku={id}` 사전 선택 링크.
+const MASTER_HREF = "/shop/purrpik-shelter";
 const SHELTER_EDITIONS = [
   { id: "basic-m", label: "BASIC M", desc: "한 마리 전용 베이직" },
   { id: "basic-l", label: "BASIC L", desc: "두 마리까지 베이직" },
@@ -121,10 +124,17 @@ export function MegaMenu() {
               <div className="mt-2 px-4 py-2 text-xs font-semibold tracking-widest text-mute-1 uppercase">
                 Cat — Editions
               </div>
+              <Link
+                href={MASTER_HREF}
+                onClick={() => setMobileOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-ink hover:text-brand-mustard transition-colors"
+              >
+                푸르픽 길고양이집 (전체)
+              </Link>
               {SHELTER_EDITIONS.map((ed) => (
                 <Link
                   key={ed.id}
-                  href={`/shop/${ed.id}`}
+                  href={`${MASTER_HREF}?sku=${ed.id}`}
                   onClick={() => setMobileOpen(false)}
                   className="px-4 py-2 text-sm text-mute-1 hover:text-ink transition-colors"
                 >
@@ -194,22 +204,35 @@ export function MegaMenu() {
                   </div>
 
                   {p.type === "cat" ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      {SHELTER_EDITIONS.map((ed) => (
-                        <Link
-                          key={ed.id}
-                          href={`/shop/${ed.id}`}
-                          className="group block p-2 -m-2 rounded-md hover:bg-secondary transition-colors"
-                        >
-                          <div className="text-sm font-semibold text-ink group-hover:text-brand-mustard">
-                            {ed.label}
-                          </div>
-                          <div className="text-xs text-mute-1 mt-0.5">
-                            {ed.desc}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
+                    <>
+                      <Link
+                        href={MASTER_HREF}
+                        className="mb-3 block rounded-md border border-line p-3 transition-colors hover:border-ink"
+                      >
+                        <div className="text-sm font-semibold text-ink">
+                          푸르픽 길고양이집
+                        </div>
+                        <div className="mt-0.5 text-xs text-mute-1">
+                          4중 구조 · 4 옵션 — PDP에서 선택
+                        </div>
+                      </Link>
+                      <div className="grid grid-cols-2 gap-3">
+                        {SHELTER_EDITIONS.map((ed) => (
+                          <Link
+                            key={ed.id}
+                            href={`${MASTER_HREF}?sku=${ed.id}`}
+                            className="group block p-2 -m-2 rounded-md hover:bg-secondary transition-colors"
+                          >
+                            <div className="text-sm font-semibold text-ink group-hover:text-brand-mustard">
+                              {ed.label}
+                            </div>
+                            <div className="text-xs text-mute-1 mt-0.5">
+                              {ed.desc}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </>
                   ) : (
                     <p className="text-sm text-mute-1 leading-relaxed">
                       {p.desc}
