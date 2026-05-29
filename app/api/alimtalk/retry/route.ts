@@ -38,14 +38,26 @@ export async function GET(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // 발송 실패한 paid orders
+  // 발송 실패한 paid orders — 알림톡 변수용 products.name 조인
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("*")
+    .select(
+      "order_no, product_id, amount, buyer_phone, alimtalk_attempts, products:product_id(name)",
+    )
     .eq("status", "paid")
     .is("alimtalk_sent_at", null)
     .lt("alimtalk_attempts", MAX_ATTEMPTS)
-    .limit(BATCH_LIMIT);
+    .limit(BATCH_LIMIT)
+    .returns<
+      Array<{
+        order_no: string;
+        product_id: string;
+        amount: number;
+        buyer_phone: string | null;
+        alimtalk_attempts: number | null;
+        products: { name: string } | null;
+      }>
+    >();
 
   if (error) {
     return NextResponse.json(
@@ -80,7 +92,7 @@ export async function GET(req: NextRequest) {
       templateId,
       variables: {
         주문번호: o.order_no,
-        상품명: o.product_id,
+        상품명: o.products?.name ?? o.product_id,
         결제금액: o.amount.toLocaleString("ko-KR") + "원",
       },
     });

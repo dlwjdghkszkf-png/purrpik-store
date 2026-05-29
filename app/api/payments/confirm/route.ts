@@ -81,14 +81,23 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // 2. orders lookup
+  // 2. orders lookup — 알림톡 변수용으로 products.name 조인
   const { data: order, error: dbErr } = await supabase
     .from("orders")
     .select(
-      "id, order_no, product_id, amount, status, buyer_phone, alimtalk_attempts",
+      "id, order_no, product_id, amount, status, buyer_phone, alimtalk_attempts, products:product_id(name)",
     )
     .eq("toss_order_id", orderId)
-    .single();
+    .single<{
+      id: string;
+      order_no: string;
+      product_id: string;
+      amount: number;
+      status: string;
+      buyer_phone: string;
+      alimtalk_attempts: number | null;
+      products: { name: string } | null;
+    }>();
 
   if (dbErr || !order) {
     await notifyAdmin({
@@ -197,7 +206,7 @@ export async function POST(req: NextRequest) {
       templateId,
       variables: {
         주문번호: order.order_no,
-        상품명: order.product_id,
+        상품명: order.products?.name ?? order.product_id,
         결제금액: `${order.amount.toLocaleString("ko-KR")}원`,
       },
     });

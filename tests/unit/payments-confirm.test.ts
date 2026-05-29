@@ -23,11 +23,12 @@ process.env.SOLAPI_KAKAO_TEMPLATE_ORDER = "TEST_TEMPLATE_001";
 const mockOrderRow = {
   id: "uuid-1",
   order_no: "PP-20260521-ABC123",
-  product_id: "basic-m",
+  product_id: "purrpik-shelter",
   amount: 39000,
-  status: "pending" as const,
+  status: "pending" as "pending" | "paid",
   buyer_phone: "01012345678",
   alimtalk_attempts: 0,
+  products: { name: "푸르픽 길고양이집" },
 };
 
 let supabaseState: {
