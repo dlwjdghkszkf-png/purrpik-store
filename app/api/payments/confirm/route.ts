@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
   const { data: order, error: dbErr } = await supabase
     .from("orders")
     .select(
-      "id, order_no, product_id, amount, status, buyer_phone, alimtalk_attempts, products:product_id(name)",
+      "id, order_no, product_id, amount, status, buyer_name, buyer_phone, alimtalk_attempts, products:product_id(name)",
     )
     .eq("toss_order_id", orderId)
     .single<{
@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
       product_id: string;
       amount: number;
       status: string;
+      buyer_name: string;
       buyer_phone: string;
       alimtalk_attempts: number | null;
       products: { name: string } | null;
@@ -205,6 +206,7 @@ export async function POST(req: NextRequest) {
       to: order.buyer_phone,
       templateId,
       variables: {
+        고객명: order.buyer_name,
         주문번호: order.order_no,
         상품명: order.products?.name ?? order.product_id,
         결제금액: `${order.amount.toLocaleString("ko-KR")}원`,

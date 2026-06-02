@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
   const { data: orders, error } = await supabase
     .from("orders")
     .select(
-      "order_no, product_id, amount, buyer_phone, alimtalk_attempts, products:product_id(name)",
+      "order_no, product_id, amount, buyer_name, buyer_phone, alimtalk_attempts, products:product_id(name)",
     )
     .eq("status", "paid")
     .is("alimtalk_sent_at", null)
@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
         order_no: string;
         product_id: string;
         amount: number;
+        buyer_name: string;
         buyer_phone: string | null;
         alimtalk_attempts: number | null;
         products: { name: string } | null;
@@ -91,6 +92,7 @@ export async function GET(req: NextRequest) {
       to: o.buyer_phone,
       templateId,
       variables: {
+        고객명: o.buyer_name,
         주문번호: o.order_no,
         상품명: o.products?.name ?? o.product_id,
         결제금액: o.amount.toLocaleString("ko-KR") + "원",

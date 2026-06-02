@@ -26,6 +26,7 @@ const mockOrderRow = {
   product_id: "purrpik-shelter",
   amount: 39000,
   status: "pending" as "pending" | "paid",
+  buyer_name: "이정환",
   buyer_phone: "01012345678",
   alimtalk_attempts: 0,
   products: { name: "푸르픽 길고양이집" },
