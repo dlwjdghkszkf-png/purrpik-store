@@ -14,9 +14,10 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type ProductEdition = "BASIC" | "ALL_IN_ONE";
-export type ProductSizeClass = "M" | "L";
+export type ProductEdition = "BASIC" | "ALL_IN_ONE" | "MULTI";
+export type ProductSizeClass = "M" | "L" | "MULTI";
 export type PetType = "cat" | "dog" | "both";
+export type CategoryPetType = "cat" | "dog" | "both";
 
 /**
  * Stage 18 — master product variants (JSONB).
@@ -74,6 +75,9 @@ export interface Database {
           is_master: boolean;
           price_min: number | null;
           price_max: number | null;
+          // Stage 0007 — categories
+          category_id: string | null;
+          short_description: string | null;
         };
         Insert: {
           id: string;
@@ -95,6 +99,8 @@ export interface Database {
           is_master?: boolean;
           price_min?: number | null;
           price_max?: number | null;
+          category_id?: string | null;
+          short_description?: string | null;
         };
         Update: {
           id?: string;
@@ -116,6 +122,41 @@ export interface Database {
           is_master?: boolean;
           price_min?: number | null;
           price_max?: number | null;
+          category_id?: string | null;
+          short_description?: string | null;
+        };
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          id: string;
+          parent_id: string | null;
+          name: string;
+          slug: string;
+          pet_type: CategoryPetType;
+          display_order: number;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          parent_id?: string | null;
+          name: string;
+          slug: string;
+          pet_type: CategoryPetType;
+          display_order?: number;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          parent_id?: string | null;
+          name?: string;
+          slug?: string;
+          pet_type?: CategoryPetType;
+          display_order?: number;
+          active?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };
