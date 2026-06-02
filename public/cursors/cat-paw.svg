@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 고양이 발바닥 — 작고 둥근 4 손가락 + 큰 손바닥 -->
+  <g fill="#17B3A1" stroke="#0E8C7E" stroke-width="0.8">
+    <!-- 4 toe pads (둥글고 작음, 4개 균등 배치) -->
+    <ellipse cx="9" cy="8" rx="2.2" ry="2.8" />
+    <ellipse cx="14" cy="5.5" rx="2.2" ry="2.8" />
+    <ellipse cx="19" cy="5.5" rx="2.2" ry="2.8" />
+    <ellipse cx="24" cy="8" rx="2.2" ry="2.8" />
+    <!-- main pad (큰 하트형 손바닥) -->
+    <path d="M16 13 C 9 13, 7 19, 9 24 C 11 28, 14 29, 16 28 C 18 29, 21 28, 23 24 C 25 19, 23 13, 16 13 Z" />
+  </g>
+</svg>

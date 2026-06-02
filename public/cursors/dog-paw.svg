@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 강아지 발바닥 — 4 손가락 + 큰 손바닥 (고양이보다 두툼) -->
+  <g fill="#163F39" stroke="#0E8C7E" stroke-width="0.8">
+    <!-- 4 toe pads (조금 더 큼) -->
+    <ellipse cx="8" cy="9" rx="2.8" ry="3.2" />
+    <ellipse cx="13.5" cy="6" rx="2.8" ry="3.2" />
+    <ellipse cx="18.5" cy="6" rx="2.8" ry="3.2" />
+    <ellipse cx="24" cy="9" rx="2.8" ry="3.2" />
+    <!-- main pad (직사각형 둥근, 강아지는 더 큼) -->
+    <path d="M16 14 C 8 14, 6 21, 9 26 C 12 29, 14 29, 16 28 C 18 29, 20 29, 23 26 C 26 21, 24 14, 16 14 Z" />
+  </g>
+</svg>

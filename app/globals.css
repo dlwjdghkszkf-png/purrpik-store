@@ -198,4 +198,19 @@
   .container-page {
     @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8;
   }
+
+  /* 펫 섹터별 마우스 cursor — /cat /dog 라우트 layout에서 wrapper 클래스로 적용 */
+  .pet-cat,
+  .pet-cat a,
+  .pet-cat button,
+  .pet-cat [role="button"] {
+    cursor: url("/cursors/cat-paw.png") 16 16, pointer;
+  }
+  .pet-dog,
+  .pet-dog a,
+  .pet-dog button,
+  .pet-dog [role="button"] {
+    cursor: url("/cursors/dog-paw.png") 16 16, pointer;
+  }
+  /* both 섹터는 cursor 변경 X (혼합) */
 }
