@@ -14,7 +14,10 @@ export const metadata: Metadata = {
   title: "길고양이 매거진 — 푸르픽",
   description:
     "수의사 자문 검증을 거친 길고양이 입양·케어·해외 사례·영양·건강 가이드. 매일 1편씩 발행합니다.",
-  alternates: { canonical: `${BASE_URL}/articles`, types: { "application/rss+xml": `${BASE_URL}/rss.xml` } },
+  alternates: {
+    canonical: `${BASE_URL}/articles`,
+    types: { "application/rss+xml": `${BASE_URL}/rss.xml` },
+  },
   openGraph: {
     title: "길고양이 매거진 — 푸르픽",
     description:
@@ -27,9 +30,28 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600;
 
-export default function ArticlesIndexPage() {
-  const articles = getAllArticles();
+type SearchParams = Promise<{ tag?: string }>;
+
+export default async function ArticlesIndexPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { tag } = await searchParams;
+  const all = getAllArticles();
+  const articles = tag
+    ? all.filter((a) => a.tags.includes(tag))
+    : all;
   const categories = Object.values(ARTICLE_CATEGORIES);
+
+  // 태그 빈도 카운트 (상위 20개).
+  const tagFreq = new Map<string, number>();
+  for (const a of all) {
+    for (const t of a.tags) tagFreq.set(t, (tagFreq.get(t) ?? 0) + 1);
+  }
+  const topTags = Array.from(tagFreq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20);
 
   const collectionJsonLd = {
     "@context": "https://schema.org",
@@ -89,10 +111,46 @@ export default function ArticlesIndexPage() {
         </ul>
       </section>
 
+      {topTags.length > 0 && (
+        <section className="container-page pb-8">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-small text-mute-2">태그</span>
+            {tag && (
+              <Link
+                href="/articles"
+                className="rounded-full bg-ink px-3 py-1 text-xs font-medium text-white"
+              >
+                # {tag} ✕
+              </Link>
+            )}
+            {topTags.map(([t, count]) => (
+              <Link
+                key={t}
+                href={`/articles?tag=${encodeURIComponent(t)}`}
+                className={`rounded-full px-3 py-1 text-xs transition ${
+                  t === tag
+                    ? "bg-ink text-white"
+                    : "bg-bg-2 text-mute-1 hover:bg-line"
+                }`}
+              >
+                #{t}
+                <span className="ml-1 text-mute-2">{count}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="container-page pb-20">
-        <h2 className="mb-6 text-2xl font-bold">최근 발행</h2>
+        <h2 className="mb-6 text-2xl font-bold">
+          {tag ? `# ${tag} (${articles.length}편)` : "최근 발행"}
+        </h2>
         {articles.length === 0 ? (
-          <p className="text-mute-1">아직 발행된 글이 없습니다.</p>
+          <p className="text-mute-1">
+            {tag
+              ? "해당 태그의 글이 없습니다."
+              : "아직 발행된 글이 없습니다."}
+          </p>
         ) : (
           <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {articles.map((a) => {

@@ -38,6 +38,12 @@ export async function generateMetadata({
   const article = getArticleBySlug(category as ArticleCategorySlug, slug);
   if (!article) return {};
 
+  // OG 우선순위: 명시된 og_image > hero_image > 동적 생성(/api/og).
+  const BASE_URL =
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+  const dynamicOg = `${BASE_URL}/api/og?title=${encodeURIComponent(article.title)}&category=${encodeURIComponent(ARTICLE_CATEGORIES[article.category_slug].label)}&author=${encodeURIComponent(article.author === "purrpik-editor" ? "푸르픽 편집부" : article.author)}`;
+  const ogImage = article.og_image ?? article.hero_image ?? dynamicOg;
+
   return {
     title: `${article.title} | 푸르픽 매거진`,
     description: article.excerpt,
@@ -51,11 +57,7 @@ export async function generateMetadata({
       modifiedTime: article.updated_at ?? article.published_at,
       authors: [article.author],
       tags: article.tags,
-      images: article.og_image
-        ? [{ url: article.og_image }]
-        : article.hero_image
-          ? [{ url: article.hero_image }]
-          : undefined,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
       siteName: "푸르픽 PURRPIK",
       locale: "ko_KR",
     },
@@ -63,7 +65,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt,
-      images: article.og_image ?? article.hero_image,
+      images: ogImage,
     },
     other: {
       "article:author": article.author,
