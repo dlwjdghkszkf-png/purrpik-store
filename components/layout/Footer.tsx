@@ -22,6 +22,7 @@ const COL_SHOP = [
 const COL_INFO = [
   { label: "브랜드 스토리", href: "/about" },
   { label: "길냥이 돌봄 가이드", href: "/care-guide" },
+  { label: "매거진", href: "/articles" },
   { label: "리뷰", href: "/reviews" },
   {
     label: "인스타그램",

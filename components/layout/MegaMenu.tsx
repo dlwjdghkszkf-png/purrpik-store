@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { label: "Shop", href: "/shop", hasMega: true },
   { label: "Reviews", href: "/reviews" },
   { label: "Care Guide", href: "/care-guide" },
+  { label: "Magazine", href: "/articles" },
   { label: "About", href: "/about" },
 ];
 

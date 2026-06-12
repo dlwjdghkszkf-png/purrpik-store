@@ -1,11 +1,16 @@
 /**
- * Stage 16 → Stage 18 — sitemap.xml.
+ * sitemap.xml — 정적 라우트 + 마스터 PDP + Articles + Authors 동적 통합.
  *
- * 정적 라우트 + 마스터 PDP 1 + 4 SKU 사전선택 URL. 동적 생성 — Next.js metadata route.
- * /order/* /orders/lookup /api/* /dev/* 는 robots.ts에서 disallow.
+ * /order/* /orders/lookup /api/* /dev/* 는 robots.ts disallow.
  */
 
 import type { MetadataRoute } from "next";
+
+import {
+  ARTICLE_CATEGORIES,
+  getAllArticles,
+  getAllAuthors,
+} from "@/lib/articles";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
 
@@ -26,9 +31,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/give-back`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE_URL}/articles`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
   ];
 
-  // 마스터 PDP 1개 (최우선) + 각 SKU 사전선택 URL 4개.
   const masterRoute: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/shop/${MASTER_ID}`,
@@ -44,5 +49,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...masterRoute, ...skuRoutes];
+  const categoryRoutes: MetadataRoute.Sitemap = Object.keys(
+    ARTICLE_CATEGORIES,
+  ).map((slug) => ({
+    url: `${BASE_URL}/articles/${slug}`,
+    lastModified: now,
+    changeFrequency: "daily",
+    priority: 0.7,
+  }));
+
+  const articleRoutes: MetadataRoute.Sitemap = getAllArticles().map((a) => ({
+    url: a.url,
+    lastModified: new Date(a.updated_at ?? a.published_at),
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  const authorRoutes: MetadataRoute.Sitemap = getAllAuthors().map((a) => ({
+    url: a.url,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.4,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...masterRoute,
+    ...skuRoutes,
+    ...categoryRoutes,
+    ...articleRoutes,
+    ...authorRoutes,
+  ];
 }
