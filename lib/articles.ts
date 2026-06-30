@@ -133,20 +133,37 @@ export function getAllArticles(): Article[] {
     );
 }
 
+/**
+ * Next.js 16은 dynamic route의 `params` 값을 percent-encoded 상태로 넘긴다.
+ * 한글 slug(예: "고양이-구토-증상-진단")는 요청 시 "%EA%B3%A0..."로 도착하므로
+ * 디코드 없이 raw 파일명 slug와 비교하면 항상 mismatch → notFound() → 404.
+ * 모든 lookup의 단일 진입점에서 방어적으로 디코드한다(malformed % 시퀀스는 raw 유지).
+ */
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export function getArticleBySlug(
   category: ArticleCategorySlug,
   slug: string,
 ): Article | null {
+  const cat = safeDecode(category);
+  const s = safeDecode(slug);
   const all = getAllArticles();
   return (
-    all.find((a) => a.category_slug === category && a.slug === slug) ?? null
+    all.find((a) => a.category_slug === cat && a.slug === s) ?? null
   );
 }
 
 export function getArticlesByCategory(
   category: ArticleCategorySlug,
 ): Article[] {
-  return getAllArticles().filter((a) => a.category_slug === category);
+  const cat = safeDecode(category);
+  return getAllArticles().filter((a) => a.category_slug === cat);
 }
 
 export function getRelatedArticles(
@@ -205,7 +222,8 @@ export function getAllAuthors(): Author[] {
 }
 
 export function getAuthorBySlug(slug: string): Author | null {
-  return getAllAuthors().find((a) => a.slug === slug) ?? null;
+  const s = safeDecode(slug);
+  return getAllAuthors().find((a) => a.slug === s) ?? null;
 }
 
 // ============ Schema.org JSON-LD ============
