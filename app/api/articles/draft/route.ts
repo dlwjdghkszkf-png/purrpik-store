@@ -233,11 +233,11 @@ async function githubCreatePr(
     method: "POST",
     headers,
     body: JSON.stringify({
-      title: `[Article 초안] ${title}`,
+      title: `[매거진] ${title}`,
       head: branchName,
       base: baseBranch,
       body,
-      draft: true,
+      draft: false,
     }),
   });
   if (!prRes.ok) throw new Error(`pr ${await prRes.text()}`);
