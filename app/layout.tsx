@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   title: "푸르픽 — 길고양이 보호 셸터",
   description:
     "4중 구조 길고양이 야외 셸터. 옥스포드 600D · TPU · EPE Foam · AL Foil.",
+  // 검색엔진 소유확인 (공개 토큰 — 비밀 아님).
+  verification: {
+    google: "stJUWIR-IRK2dcJ2sid5sV3kr3sDTiNZv9tWX-YLgFI",
+    other: {
+      "naver-site-verification": "8a81f9fd823612ef1a819952142fb7c1a1555ec2",
+    },
+  },
 };
 
 export const viewport: Viewport = {
