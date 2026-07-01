@@ -1,7 +1,6 @@
 {
   "crons": [
     { "path": "/api/alimtalk/retry", "schedule": "0 9 * * *" },
-    { "path": "/api/orders/cleanup", "schedule": "0 3 * * *" },
-    { "path": "/api/articles/draft", "schedule": "0 0 * * *" }
+    { "path": "/api/orders/cleanup", "schedule": "0 3 * * *" }
   ]
 }
