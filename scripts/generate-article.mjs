@@ -113,6 +113,74 @@ function gatherEvidence(question) {
   return scored.map((x) => x.it);
 }
 
+// ── 출처 도메인 게이트 (결정적) ───────────────────────────────────
+// LLM 지시("블로그 금지")만으론 근거 스니펫의 블로그 URL이 sources로 새어듦.
+// → 코드에서 화이트리스트 도메인만 통과시키고 나머지는 제거(폴백 주입).
+const SOURCE_ALLOW = [
+  /(^|\.)go\.kr$/i,        // 정부·지자체
+  /(^|\.)or\.kr$/i,        // 협회·공공기관 (kaha.or.kr 등)
+  /(^|\.)ac\.kr$/i,        // 대학
+  /(^|\.)catvets\.com$/i,  // AAFP
+  /(^|\.)icatcare\.org$/i, // International Cat Care
+  /(^|\.)wsava\.org$/i,
+  /(^|\.)avma\.org$/i,
+  /(^|\.)aspca\.org$/i,
+  /(^|\.)rspca\.org\.uk$/i,
+  /(^|\.)merckvetmanual\.com$/i,
+  /(^|\.)fabcats\.org$/i,
+  /(^|\.)cornell\.edu$/i,
+];
+// 명시 차단(이중 안전): 블로그·카페·지식인·위키·SNS·커뮤니티 UGC.
+const SOURCE_BLOCK =
+  /(blog\.|cafe\.|kin\.naver|tistory|brunch|velog|medium\.com|wordpress|blogspot|youtu|instagram|facebook|threads\.net|twitter|x\.com|namu\.wiki|wikipedia|dcinside|fmkorea|clien|ppomppu|daum\.net\/board|band\.us)/i;
+
+function hostOf(url) {
+  try { return new URL(url).host.toLowerCase(); } catch { return ""; }
+}
+function isOfficialSource(url) {
+  const h = hostOf(url);
+  if (!h) return false;
+  if (SOURCE_BLOCK.test(url)) return false;
+  return SOURCE_ALLOW.some((re) => re.test(h));
+}
+
+// 전부 걸러져 0건이 되면 카테고리별 공식 출처를 주입 (기사에 출처 0개 방지).
+const FALLBACK_SOURCES = {
+  "adoption-guide": [
+    { title: "동물보호관리시스템 — 유실·유기동물 안내", url: "https://www.animal.go.kr", publisher: "농림축산검역본부" },
+    { title: "동물보호법", url: "https://www.law.go.kr", publisher: "국가법령정보센터" },
+  ],
+  "street-care": [
+    { title: "길고양이 중성화(TNR) 사업 안내", url: "https://www.animal.go.kr", publisher: "농림축산검역본부" },
+    { title: "동물보호법", url: "https://www.law.go.kr", publisher: "국가법령정보센터" },
+  ],
+  "global-care": [
+    { title: "International Cat Care — Community Cats", url: "https://icatcare.org", publisher: "International Cat Care" },
+  ],
+  health: [
+    { title: "한국동물병원협회", url: "https://www.kaha.or.kr", publisher: "한국동물병원협회" },
+    { title: "AAFP Feline Practice Guidelines", url: "https://catvets.com/guidelines/practice-guidelines", publisher: "American Association of Feline Practitioners" },
+  ],
+  nutrition: [
+    { title: "한국동물병원협회 — 반려동물 영양", url: "https://www.kaha.or.kr", publisher: "한국동물병원협회" },
+    { title: "WSAVA Global Nutrition Guidelines", url: "https://wsava.org/global-guidelines/global-nutrition-guidelines/", publisher: "WSAVA" },
+  ],
+};
+
+function sanitizeSources(sources, category) {
+  const kept = [], dropped = [];
+  for (const s of sources || []) {
+    if (s?.url && isOfficialSource(s.url)) kept.push(s);
+    else dropped.push(s?.url || JSON.stringify(s));
+  }
+  let injected = false;
+  if (kept.length === 0) {
+    kept.push(...(FALLBACK_SOURCES[category] || FALLBACK_SOURCES["street-care"]));
+    injected = true;
+  }
+  return { sources: kept, dropped, injected };
+}
+
 // ── 3. 생성 프롬프트 (GEO + 근거 + 저작권 안전) ────────────────────
 function buildPrompt(topic, evidence) {
   const catLabel = CATEGORIES[topic.category];
@@ -135,7 +203,12 @@ ${ev || "(근거 부족 — 일반적 정론 + 권위 기관 자료로 작성)"}
 
 # 저작권·정확성 규칙 (필수)
 1. 위 근거는 "무슨 질문·사실이 오가는지" 파악용. 문장을 그대로 옮기지 말고 100% 새로 씁니다 (팩트는 저작권 없음, 표현은 보호됨).
-2. 출처(sources)는 반드시 **정부·공식기관·수의학회**만 인용 (농림축산식품부, 동물보호관리시스템 animal.go.kr, 국가법령정보센터 law.go.kr, 농림축산검역본부, 한국동물병원협회, AAFP, RSPCA, WSAVA, 지자체 공식 조례). **개인 블로그·카페·지식인은 출처로 절대 인용 금지** (위 근거는 질문 파악용일 뿐, 출처 아님). 특정 수의사 인용 시 "○○ 동물병원 (공식 URL)" 실명·링크만.
+2. 출처(sources) 도메인 화이트리스트 — **아래에 해당하는 URL만 sources에 넣습니다**:
+   - 정부·지자체: **.go.kr** (animal.go.kr 동물보호관리시스템, law.go.kr 국가법령정보센터, mafra.go.kr 농림축산식품부, qia.go.kr 검역본부 등)
+   - 협회·학회: **.or.kr** (kaha.or.kr 한국동물병원협회 등), 국제: catvets.com(AAFP), icatcare.org, wsava.org, avma.org, aspca.org, rspca.org.uk, merckvetmanual.com
+   - 대학: **.ac.kr**
+   🚫 **절대 금지 도메인** (하나라도 sources에 넣으면 규칙 위반·기사 폐기): blog.naver.com, cafe.naver.com, kin.naver.com(지식인), tistory, brunch, velog, youtube, instagram, 나무위키/위키백과, 디시·펨코·클리앙 등 모든 개인블로그·카페·SNS·커뮤니티. (위 "참고 근거"는 질문 파악용일 뿐 출처가 아님 — 절대 sources로 옮기지 마세요.)
+   - 확실한 공식 출처를 못 찾으면 sources에 animal.go.kr, law.go.kr, kaha.or.kr 같은 대표 공식기관만 최소로 넣습니다. 지어내기 금지.
 2b. 지역·기관별 편차가 있는 사실(지자체 지원, 신고 절차, 소방 대응 등)은 "일부/다수 지자체" "지역에 따라 다름" 단서를 반드시 붙이고 전국 일괄 단정 금지.
 3. 실재하지 않는 출처·URL·수치를 지어내지 마세요. 확실치 않으면 "일반적으로" 수준으로만.
 4. 효능·효과 단정(치료/완치/99%) 금지 — 식약처 가이드.
@@ -196,10 +269,11 @@ ${draft.sources.map((s) => `- ${s.title} | ${s.publisher} | ${s.url}`).join("\n"
 ${draft.body.slice(0, 2500)}
 
 # 점검 항목
-1. 출처 URL/발행처가 실재할 법한가? 지어낸 티가 나는가?
-2. 의학·법률 주장 중 사실과 다르거나 과장된 게 있는가?
-3. 효능효과 단정(치료/완치 등) 표현이 있는가?
-4. 수의사 감수가 필요한 진단성 내용인가?
+1. **출처 도메인**: sources에 .go.kr / .or.kr / .ac.kr / 국제 수의학회(catvets.com·icatcare.org·wsava.org·avma.org) 외 도메인(블로그·카페·지식인·유튜브·위키·SNS)이 하나라도 있으면 → **무조건 verdict="fail"**.
+2. 출처 URL/발행처가 실재할 법한가? 지어낸 티가 나는가?
+3. 의학·법률 주장 중 사실과 다르거나 과장된 게 있는가?
+4. 효능효과 단정(치료/완치 등) 표현이 있는가?
+5. 수의사 감수가 필요한 진단성 내용인가?
 
 # 출력 (JSON만)
 \`\`\`json
@@ -275,6 +349,12 @@ function main() {
   const slug = slugify(draft.title);
   log(`초안: "${draft.title}"`);
 
+  // 출처 도메인 게이트 (결정적): 비공식 URL 제거, 0건이면 공식 폴백 주입.
+  const cleanSrc = sanitizeSources(draft.sources, topic.category);
+  draft.sources = cleanSrc.sources;
+  if (cleanSrc.dropped.length) log(`⚠️ 비공식 출처 ${cleanSrc.dropped.length}건 제거: ${cleanSrc.dropped.join(", ")}`);
+  if (cleanSrc.injected) log("ℹ️ 공식 출처 0건 → 카테고리 폴백 주입");
+
   const check = verifyDraft(topic, draft);
   log(`검증: ${check.verdict}${check.issues?.length ? " — " + check.issues.join("; ") : ""}`);
 
@@ -313,7 +393,10 @@ function main() {
 
     const label = topic.needsVet ? "[매거진][감수필요] " : "[매거진] ";
     const vetBanner = topic.needsVet ? "\n\n> ⚠️ **수의사 감수 필요** — 진단/치료성 내용. 수의사 확인 후 머지하세요.\n" : "";
-    const body = `실제 고빈도 질문(${topic.freq}회) 기반 자동 생성 (Claude+codex OAuth, $0).${vetBanner}
+    const srcNote = cleanSrc.dropped.length
+      ? `\n\n🔒 비공식 출처 ${cleanSrc.dropped.length}건 자동 제거${cleanSrc.injected ? " → 공식 폴백 주입" : ""} (공식 도메인만 게시).`
+      : "";
+    const body = `실제 고빈도 질문(${topic.freq}회) 기반 자동 생성 (Claude+codex OAuth, $0).${vetBanner}${srcNote}
 
 **검증 결과: ${check.verdict}**
 ${(check.issues || []).map((i) => `- ${i}`).join("\n") || "- 특이사항 없음"}
