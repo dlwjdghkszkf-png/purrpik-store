@@ -190,7 +190,7 @@ export default async function ProductPage({
       offerCount: variants.skus.length,
       availability: "https://schema.org/InStock",
       url: `https://purrpik.com/shop/${product.id}`,
-      seller: { "@type": "Organization", name: "신성컴퍼니" },
+      seller: { "@type": "Organization", name: "제이에이치컴퍼니" },
     },
   };
   if (reviews.length > 0) {

@@ -8,11 +8,12 @@ export const metadata: Metadata = {
 export const revalidate = 86400;
 
 const ROWS: { k: string; v: string }[] = [
-  { k: "상호", v: "(주)신성컴퍼니" },
-  { k: "대표자", v: "(placeholder)" },
-  { k: "사업자등록번호", v: "000-00-00000 (placeholder)" },
-  { k: "통신판매업신고", v: "제0000-서울00-0000호 (placeholder)" },
-  { k: "주소", v: "(placeholder)" },
+  { k: "상호", v: "제이에이치컴퍼니" },
+  { k: "대표자", v: "이정환" },
+  { k: "사업자등록번호", v: "263-13-02666" },
+  { k: "통신판매업신고", v: "2024-경기파주-1305호" },
+  { k: "사업장 주소", v: "경기도 파주시 고봉로 755-27, 가동 201-A52호(상지석동)" },
+  { k: "유선번호", v: "010-2058-0176" },
   { k: "이메일", v: "help@purrpik.co.kr" },
   { k: "호스팅 제공자", v: "Vercel Inc." },
 ];
@@ -22,7 +23,7 @@ export default function BusinessInfoPage() {
     <>
       <h1 className="text-3xl font-bold md:text-4xl">사업자정보</h1>
       <p className="mt-3 text-small text-mute-2">
-        * 정확한 사업자정보는 사용자가 보완 예정.
+        전자상거래 등에서의 소비자보호에 관한 법률에 따른 사업자 정보입니다.
       </p>
 
       <div className="mt-10 overflow-hidden rounded-lg border border-line bg-white">

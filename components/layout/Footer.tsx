@@ -287,11 +287,16 @@ export function Footer() {
           </ul>
         </div>
 
-        {/* 사업자정보 + 카피라이트 */}
+        {/* 사업자정보 + 카피라이트 (전자상거래법 의무 표시 — 사업자등록증 일치) */}
         <div className="mt-6 space-y-1">
           <p className="text-[11px] text-mute-2 leading-relaxed">
-            (주)신성컴퍼니 | 사업자등록번호: 000-00-00000 | 통신판매업신고:
-            제0000-서울00-0000호
+            제이에이치컴퍼니 | 대표 이정환 | 사업자등록번호 263-13-02666
+          </p>
+          <p className="text-[11px] text-mute-2 leading-relaxed">
+            경기도 파주시 고봉로 755-27, 가동 201-A52호(상지석동) | 통신판매업 2024-경기파주-1305호
+          </p>
+          <p className="text-[11px] text-mute-2 leading-relaxed">
+            고객문의 010-2058-0176 · help@purrpik.co.kr
           </p>
           <p className="text-[11px] text-mute-2">
             © 2026 푸르픽. All rights reserved.
