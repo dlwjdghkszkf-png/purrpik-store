@@ -126,7 +126,7 @@ export default async function ArticlePage({
         </nav>
 
         <header className="mt-4 mb-8">
-          <span className="text-xs font-medium uppercase tracking-wide text-accent">
+          <span className="text-xs font-medium uppercase tracking-wide text-brand-mustard">
             {cat.label}
           </span>
           <h1 className="mt-2 text-3xl font-bold leading-tight md:text-4xl">
@@ -174,8 +174,31 @@ export default async function ArticlePage({
           </figure>
         )}
 
-        <div className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:mt-12 prose-h2:text-2xl prose-h3:text-xl prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-table:text-sm prose-img:rounded-xl">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <div className="article-body prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-ink prose-strong:text-ink prose-h2:mt-12 prose-h2:text-2xl prose-h3:text-xl prose-table:text-sm prose-img:rounded-xl">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // 4열 표가 모바일에서 넘치지 않도록 가로 스크롤 래퍼로 감쌈
+              table: ({ node, ...props }) => (
+                <div className="table-scroll">
+                  <table {...props} />
+                </div>
+              ),
+              // 외부 링크는 새 탭 + 보안 rel
+              a: ({ node, href, ...props }) => {
+                const external = !!href && /^https?:\/\//.test(href);
+                return (
+                  <a
+                    href={href}
+                    {...props}
+                    {...(external
+                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      : {})}
+                  />
+                );
+              },
+            }}
+          >
             {article.content}
           </ReactMarkdown>
         </div>
@@ -231,7 +254,7 @@ export default async function ArticlePage({
               <div>
                 <Link
                   href={`/authors/${author.slug}`}
-                  className="font-bold hover:text-accent"
+                  className="font-bold hover:text-brand-mustard"
                 >
                   {author.name}
                 </Link>

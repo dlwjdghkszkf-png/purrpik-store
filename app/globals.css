@@ -215,3 +215,71 @@
   }
   /* both 섹터는 cursor 변경 X (혼합) */
 }
+
+/* ============================================================
+   매거진 본문 — 한국어 모바일 가독성 최적화
+   ⚠️ 레이어 밖(unlayered)에 둔다: @tailwindcss/typography 의 .prose 가
+      @layer components 보다 우선하므로, 레이어 안에 두면 font-size·
+      line-height·color 오버라이드가 무시됨. unlayered + 특이도(.article-body.prose)
+      로 확실히 이긴다.
+   - keep-all: 어절 단위 줄바꿈 (단어 중간 끊김 방지)
+   - 표: 모바일 가로 스크롤 (4열 표 오버플로 방지)
+   - 링크: 머스터드 (연회색 accent 안 보이던 버그 대체)
+   ============================================================ */
+.article-body.prose {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-size: 1.0625rem; /* 17px 모바일 본문 */
+  line-height: 1.85;
+  color: #262626;
+}
+@media (min-width: 768px) {
+  .article-body.prose {
+    font-size: 1.125rem; /* 18px 데스크톱 */
+    line-height: 1.9;
+  }
+}
+.article-body.prose p,
+.article-body.prose li {
+  line-height: 1.85;
+}
+.article-body.prose :where(h2, h3) {
+  word-break: keep-all;
+}
+.article-body.prose a {
+  color: var(--color-brand-mustard-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+.article-body.prose a:hover {
+  color: var(--color-brand-mustard);
+}
+.article-body.prose blockquote {
+  border-left: 3px solid var(--color-brand-mustard);
+  background: #fafaf9;
+  padding: 0.85em 1.1em;
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: normal;
+  color: var(--color-mute-1);
+}
+/* 표 가로 스크롤 래퍼 (ReactMarkdown components에서 감쌈) */
+.article-body.prose .table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5em -1rem;
+  padding: 0 1rem;
+}
+@media (min-width: 768px) {
+  .article-body.prose .table-scroll {
+    margin-inline: 0;
+    padding: 0;
+  }
+}
+.article-body.prose .table-scroll table {
+  margin: 0;
+  min-width: 34rem; /* 4열 표가 뭉개지지 않을 최소폭 → 좁은 화면선 가로 스크롤 */
+}
+.article-body.prose .table-scroll th {
+  white-space: nowrap; /* 헤더만 한 줄 유지 */
+}
