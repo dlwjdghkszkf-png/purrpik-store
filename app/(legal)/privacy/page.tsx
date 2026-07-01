@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl font-semibold text-ink">1. 수집하는 개인정보 항목</h2>
           <p className="mt-3">
-            (주)신성컴퍼니 (이하 “회사”)는 푸르픽 서비스 제공을 위해 다음의 개인정보를
+            제이에이치컴퍼니 (이하 “회사”)는 푸르픽 서비스 제공을 위해 다음의 개인정보를
             수집합니다.
           </p>
           <ul className="mt-3 list-disc pl-5">

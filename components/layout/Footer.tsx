@@ -293,7 +293,7 @@ export function Footer() {
             제이에이치컴퍼니 | 대표 이정환 | 사업자등록번호 263-13-02666
           </p>
           <p className="text-[11px] text-mute-2 leading-relaxed">
-            경기도 파주시 고봉로 755-27, 가동 201-A52호(상지석동) | 통신판매업: 간이과세자(신고 면제 대상)
+            경기도 파주시 고봉로 755-27, 가동 201-A52호(상지석동) | 통신판매업 2024-경기파주-1305호
           </p>
           <p className="text-[11px] text-mute-2 leading-relaxed">
             고객문의 010-2058-0176 · help@purrpik.co.kr

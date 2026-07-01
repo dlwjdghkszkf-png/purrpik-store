@@ -111,9 +111,9 @@ export default function AboutPage() {
       {/* Company */}
       <section className="bg-zinc-50 py-16 md:py-24">
         <div className="container-page max-w-3xl">
-          <h2 className="text-3xl font-bold md:text-4xl">신성컴퍼니 소개</h2>
+          <h2 className="text-3xl font-bold md:text-4xl">제이에이치컴퍼니 소개</h2>
           <p className="mt-6 text-mute-1 leading-relaxed">
-            푸르픽은 (주)신성컴퍼니의 길고양이 보호 셸터 브랜드입니다. 우리는
+            푸르픽은 제이에이치컴퍼니의 길고양이 보호 셸터 브랜드입니다. 우리는
             반려동물·길동물 용품을 직접 설계·제조·유통하며, 시장의 통념을
             의심하는 제품만 만듭니다.
           </p>

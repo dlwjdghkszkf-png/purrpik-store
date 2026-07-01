@@ -21,7 +21,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-xl font-semibold text-ink">제1조 (목적)</h2>
           <p className="mt-3">
-            본 약관은 (주)신성컴퍼니(이하 “회사”)가 운영하는 푸르픽
+            본 약관은 제이에이치컴퍼니(이하 “회사”)가 운영하는 푸르픽
             (purrpik.co.kr, 이하 “사이트”)에서 제공하는 전자상거래 관련 서비스를
             이용함에 있어 회사와 이용자의 권리·의무 및 책임 사항을 규정함을
             목적으로 합니다.
