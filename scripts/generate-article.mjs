@@ -1,165 +1,248 @@
 #!/usr/bin/env node
 /**
- * 매거진 기사 $0 자동 생성기 (Claude CLI OAuth — API 비용 0).
+ * 매거진 기사 $0 자동 생성기 v2 — demand-driven + 3층 검증 + GEO + codex 이미지.
  *
- * Vercel cron + ANTHROPIC_API_KEY 대체. 로컬 launchd가 매일 실행:
- *   1. 요일별 카테고리 선택 (월~금, 주말 휴재)
- *   2. `claude -p` (OAuth, $0)로 기사 초안 JSON 생성
- *   3. git worktree에 MDX 작성 → 브랜치 커밋/푸시 (작업트리 안 건드림)
- *   4. `gh pr create`로 PR 오픈 (PAT 불필요, gh 인증 사용)
- *   → 폰 GitHub 앱에서 Preview 확인 후 Merge → Vercel 자동 발행
+ * 파이프라인:
+ *   1. 코퍼스 backlog(빈도순 실제 질문)에서 다음 미작성 주제 선택
+ *   2. raw JSON에서 그 주제 근거(snippet+url) 추출 = 1차 근거
+ *   3. claude CLI(OAuth $0)로 GEO 최적화 오리지널 기사 생성 (팩트만, 복붙 금지)
+ *   4. claude 2차 검증 패스 (출처/주장 점검 → PR에 검증 리포트 첨부)
+ *   5. codex image_gen($0)으로 주제 맞춤 hero 이미지 → public/articles/
+ *   6. git worktree 브랜치 → gh PR (감수 필요 주제는 [감수필요] 라벨)
  *
- * 수동 실행: node scripts/generate-article.mjs          (오늘 요일 카테고리)
- *           node scripts/generate-article.mjs health   (카테고리 강제)
- *           node scripts/generate-article.mjs --force   (주말에도 생성)
+ * 비용 0 (claude/codex 둘 다 OAuth). API 키·PAT 불필요.
+ *
+ * 수동: node scripts/generate-article.mjs            (backlog 다음 주제)
+ *       node scripts/generate-article.mjs --dry       (생성만, PR/이미지 없이 stdout)
+ *       node scripts/generate-article.mjs --no-image  (이미지 생략)
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readdirSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const CORPUS_DIR = "/Users/ljh/Documents/자동화 프로그램/공통 인프라/data/cat_faq";
+const CLAUDE = process.env.CLAUDE_BIN || "claude";
+const CODEX = process.env.CODEX_BIN || "codex";
 const MODEL = "sonnet";
 
+// backlog 카테고리 → purrpik 카테고리.
+const CATEGORY_MAP = {
+  입양_적응: "adoption-guide",
+  건강: "health",
+  사료: "nutrition",
+  영양: "nutrition",
+  용품_환경: "street-care",
+  행동: "street-care",
+  기타: "street-care",
+};
+
 const CATEGORIES = {
-  "adoption-guide": {
-    label: "입양 가이드",
-    description: "길고양이를 가족으로 맞이할 때 알아야 할 모든 것 — 검역, 적응, 건강검진, 동거동물 합사.",
-  },
-  "street-care": {
-    label: "길고양이 케어",
-    description: "TNR, 겨울 보온, 급식소 운영, 길고양이 학대 신고 절차까지 — 현장 케어 실무 가이드.",
-  },
-  "global-care": {
-    label: "해외 사례",
-    description: "터키, 일본, 독일의 길고양이 정책과 시민 케어 문화 — 한국 적용 가능한 모범 사례 분석.",
-  },
-  nutrition: {
-    label: "영양·간식",
-    description: "고양이 영양학 기초 — 타우린, 수분 섭취, 간식 vs 주식 구분, 위험 식품 리스트.",
-  },
-  health: {
-    label: "건강·질병",
-    description: "고양이가 흔히 겪는 질환 — 요로결석, 신부전, 구내염, 백신 스케줄, 응급처치 가이드.",
-  },
+  "adoption-guide": "입양 가이드",
+  "street-care": "길고양이 케어",
+  "global-care": "해외 사례",
+  nutrition: "영양·간식",
+  health: "건강·질병",
 };
 
-// 요일 로테이션 (1=월 … 5=금). 주말(0,6) 휴재.
-const ROTATION = {
-  1: "adoption-guide",
-  2: "street-care",
-  3: "global-care",
-  4: "nutrition",
-  5: "health",
-};
-
-function log(msg) {
-  console.log(`[${new Date().toISOString()}] ${msg}`);
-}
-
+function log(m) { console.log(`[${new Date().toISOString()}] ${m}`); }
 function todayStr() {
-  const d = new Date();
-  const p = (n) => String(n).padStart(2, "0");
+  const d = new Date(), p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-function buildPrompt(category, dateStr) {
-  const cat = CATEGORIES[category];
+// ── 1. backlog 파싱 (🟢 바로제작 + 🟡 감수필요, 빈도순) ──────────────
+function parseBacklog() {
+  const md = readFileSync(path.join(CORPUS_DIR, "backlog_latest.md"), "utf8");
+  const rows = [];
+  let vetSection = false;
+  for (const line of md.split("\n")) {
+    // 🟡 섹션 헤딩에서만 전환 (헤더의 "수의사 감수" 안내 문구 오인 방지).
+    if (line.startsWith("##") && line.includes("감수")) vetSection = true;
+    const m = line.match(/^\|\s*(\d+)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|(.+)$/);
+    if (!m) continue;
+    const question = m[2].trim();
+    if (question === "표준 질문" || !question) continue;
+    const freq = parseInt(m[3], 10);
+    const rest = m[4].split("|").map((s) => s.trim());
+    // 🟢: 소스 | 카테고리 | 포맷 | 앵글   🟡: 카테고리 | 포맷 | 감수포인트
+    const catRaw = vetSection ? rest[0] : rest[1];
+    rows.push({
+      question,
+      freq,
+      category: CATEGORY_MAP[catRaw] || "street-care",
+      needsVet: vetSection,
+    });
+  }
+  return rows.sort((a, b) => b.freq - a.freq);
+}
+
+// 이미 작성된 질문(frontmatter source_backlog) 수집.
+function writtenQuestions() {
+  const done = new Set();
+  const root = path.join(REPO, "content", "articles");
+  if (!existsSync(root)) return done;
+  for (const cat of readdirSync(root)) {
+    const dir = path.join(root, cat);
+    if (!statSync(dir).isDirectory()) continue;
+    for (const f of readdirSync(dir)) {
+      if (!f.endsWith(".mdx")) continue;
+      const m = readFileSync(path.join(dir, f), "utf8").match(/source_backlog:\s*(.+)/);
+      if (m) done.add(m[1].replace(/^["']|["']$/g, "").trim());
+    }
+  }
+  return done;
+}
+
+// ── 2. raw JSON에서 주제 근거 추출 ────────────────────────────────
+function gatherEvidence(question) {
+  const files = readdirSync(CORPUS_DIR).filter((f) => f.startsWith("raw_") && f.endsWith(".json"));
+  const items = [];
+  for (const f of files) {
+    try { items.push(...JSON.parse(readFileSync(path.join(CORPUS_DIR, f), "utf8"))); } catch {}
+  }
+  // 질문 토큰(2자+)으로 스코어링.
+  const tokens = question.replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((t) => t.length >= 2);
+  const scored = items.map((it) => {
+    const hay = `${it.title || ""} ${it.snippet || ""} ${it.seed_keyword || ""}`;
+    const score = tokens.reduce((s, t) => s + (hay.includes(t) ? 1 : 0), 0);
+    return { it, score };
+  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 15);
+  return scored.map((x) => x.it);
+}
+
+// ── 3. 생성 프롬프트 (GEO + 근거 + 저작권 안전) ────────────────────
+function buildPrompt(topic, evidence) {
+  const catLabel = CATEGORIES[topic.category];
+  const ev = evidence.map((e, i) => `[${i + 1}] (${e.source}) ${e.title}\n    ${(e.snippet || "").slice(0, 200)}\n    ${e.url}`).join("\n");
+  const vetNote = topic.needsVet
+    ? `\n# ⚠️ 의료 주의\n이 주제는 진단·치료성 내용이라 수의사 감수 대상입니다. 단정적 진단·처방 금지. "수의사 상담 권장"을 명시하고, 응급/위험 신호 위주로 안내. 본문 맨 앞에 "이 글은 일반 정보이며 진료를 대체하지 않습니다" 안내를 넣으세요.`
+    : "";
   return `당신은 한국 길고양이 케어 브랜드 "푸르픽 PURRPIK"의 콘텐츠 에디터입니다.
-오늘은 ${dateStr}이고, "${cat.label}" 카테고리에 발행할 새 기사 초안을 작성합니다.
+아래 "핵심 질문"에 답하는 매거진 기사를 작성합니다. 이 질문은 실제 커뮤니티에서 ${topic.freq}회 나온 고빈도 질문입니다.
 
-# 카테고리 설명
-${cat.description}
+# 핵심 질문
+${topic.question}
 
-# 작성 규칙
-1. 분량: 1,800~2,500자 (한국어 기준)
-2. 톤: 차분하고 정확. 감정 과잉 금지. "동정이 아니라 케어".
-3. 모든 의학·법률적 주장은 출처를 명시 (농림축산식품부, 한국동물병원협회, AAFP, RSPCA 등 권위 있는 기관).
-4. 효능 효과 단정 표현(치료, 완치, 99% 효과 등) 금지 — 식약처 가이드라인 준수.
-5. 검증되지 않은 민간요법 금지.
-6. 5~7개 H2 섹션, 각 섹션은 200~400자.
-7. 최소 1개 표(Markdown table) 포함.
-8. 마지막에 FAQ 3개 (Q&A 형식).
-9. 마지막에 "참고 자료" 섹션 (모든 출처를 링크와 함께 명시).
-10. 본문에 푸르픽 제품 또는 카테고리 페이지(/cat, /care-guide, /articles 등) 자연스럽게 1~2회 언급.
-11. 각 H2 섹션 첫 문장은 자립형 답변 블록: 결론/정의를 먼저 40~60자 안에, 이어서 근거·수치. (LLM 인용 최적화)
+# 카테고리
+${catLabel}
+${vetNote}
 
-# 출력 형식 (반드시 이 형식으로만 출력)
+# 참고 근거 (실제 커뮤니티/지식인 수집 — 사실 파악용, 절대 문장 복붙 금지)
+${ev || "(근거 부족 — 일반적 정론 + 권위 기관 자료로 작성)"}
+
+# 저작권·정확성 규칙 (필수)
+1. 위 근거는 "무슨 질문·사실이 오가는지" 파악용. 문장을 그대로 옮기지 말고 100% 새로 씁니다 (팩트는 저작권 없음, 표현은 보호됨).
+2. 출처(sources)는 반드시 **정부·공식기관·수의학회**만 인용 (농림축산식품부, 동물보호관리시스템 animal.go.kr, 국가법령정보센터 law.go.kr, 농림축산검역본부, 한국동물병원협회, AAFP, RSPCA, WSAVA, 지자체 공식 조례). **개인 블로그·카페·지식인은 출처로 절대 인용 금지** (위 근거는 질문 파악용일 뿐, 출처 아님). 특정 수의사 인용 시 "○○ 동물병원 (공식 URL)" 실명·링크만.
+2b. 지역·기관별 편차가 있는 사실(지자체 지원, 신고 절차, 소방 대응 등)은 "일부/다수 지자체" "지역에 따라 다름" 단서를 반드시 붙이고 전국 일괄 단정 금지.
+3. 실재하지 않는 출처·URL·수치를 지어내지 마세요. 확실치 않으면 "일반적으로" 수준으로만.
+4. 효능·효과 단정(치료/완치/99%) 금지 — 식약처 가이드.
+
+# GEO 최적화 규칙 (필수 — 이 기사의 목적은 LLM/AI 검색 인용)
+1. 각 H2 섹션 첫 문장 = 자립형 답변 블록: 결론/정의를 먼저 40~60자 안에, 이어 근거·수치.
+2. 질문형 H2 헤딩 사용 (사람들이 실제 검색하는 형태).
+3. 최소 1개 비교표(Markdown table).
+4. 구체 수치·단계·기준을 명시 (추상적 서술 금지).
+5. FAQ 3개 — 각 답변은 독립적으로 인용 가능하게 완결.
+6. 본문에 푸르픽 관련 페이지(/cat, /care-guide, /articles) 1~2회 자연스럽게.
+
+# 분량·구조
+- 1,800~2,600자, H2 5~7개(각 200~400자), 마지막 "참고 자료" 섹션.
+
+# 출력 (이 JSON만, 다른 텍스트 금지)
 \`\`\`json
 {
-  "title": "한국어 기사 제목 (50자 이내)",
-  "excerpt": "기사 요약 (120자 이내)",
-  "tags": ["태그1", "태그2", "태그3", "태그4", "태그5"],
-  "sources": [
-    { "title": "출처 제목", "url": "https://...", "publisher": "발행처" }
-  ],
-  "faq": [
-    { "question": "...", "answer": "..." },
-    { "question": "...", "answer": "..." },
-    { "question": "...", "answer": "..." }
-  ],
-  "body": "# 본문 (Markdown, H1 제외 — H2부터)"
+  "title": "제목 (질문에 답하는 형태, 50자 이내)",
+  "excerpt": "요약 (120자 이내)",
+  "tags": ["태그","태그","태그","태그","태그"],
+  "sources": [{ "title": "출처명", "url": "https://...", "publisher": "발행처" }],
+  "faq": [{ "question": "...", "answer": "..." }],
+  "image_prompt": "hero 이미지용 영문 묘사 (photorealistic, 16:9, 텍스트 없음, 한국 가정/실외 맥락, 기사 주제 반영)",
+  "body": "# 본문 (H2부터, Markdown)"
 }
-\`\`\`
-
-JSON만 출력. 다른 텍스트 금지.`;
+\`\`\``;
 }
 
-function callClaude(prompt) {
-  // claude CLI OAuth = $0. stdin으로 프롬프트 전달, print 모드.
-  const out = execFileSync("claude", ["-p", "--model", MODEL], {
-    input: prompt,
-    cwd: REPO,
-    encoding: "utf8",
-    maxBuffer: 20 * 1024 * 1024,
-    timeout: 5 * 60 * 1000,
+function claudeRun(prompt) {
+  return execFileSync(CLAUDE, ["-p", "--model", MODEL], {
+    input: prompt, cwd: REPO, encoding: "utf8",
+    maxBuffer: 20 * 1024 * 1024, timeout: 6 * 60 * 1000,
   });
-  return out;
 }
 
 function parseDraft(raw) {
   const m = raw.match(/```json\s*([\s\S]+?)\s*```/) ?? raw.match(/\{[\s\S]+\}/);
   if (!m) throw new Error("초안 JSON 파싱 실패");
-  const jsonStr = m[1] ?? m[0];
-  const d = JSON.parse(jsonStr);
+  const d = JSON.parse(m[1] ?? m[0]);
   for (const k of ["title", "excerpt", "tags", "sources", "faq", "body"]) {
-    if (!d[k]) throw new Error(`초안에 ${k} 누락`);
+    if (!d[k]) throw new Error(`초안 ${k} 누락`);
   }
   return d;
 }
 
-function slugify(title) {
-  return title
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 60);
+// ── 4. 2차 검증 패스 (출처/주장 점검 → 리포트) ─────────────────────
+function verifyDraft(topic, draft) {
+  const prompt = `당신은 팩트체커입니다. 아래 길고양이 기사 초안의 정확성을 점검하세요.
+
+# 질문
+${topic.question}
+
+# 인용된 출처
+${draft.sources.map((s) => `- ${s.title} | ${s.publisher} | ${s.url}`).join("\n")}
+
+# 본문 발췌
+${draft.body.slice(0, 2500)}
+
+# 점검 항목
+1. 출처 URL/발행처가 실재할 법한가? 지어낸 티가 나는가?
+2. 의학·법률 주장 중 사실과 다르거나 과장된 게 있는가?
+3. 효능효과 단정(치료/완치 등) 표현이 있는가?
+4. 수의사 감수가 필요한 진단성 내용인가?
+
+# 출력 (JSON만)
+\`\`\`json
+{ "verdict": "pass | caution | fail", "issues": ["문제점..."], "notes": "종합 의견 2~3줄" }
+\`\`\``;
+  try {
+    const raw = claudeRun(prompt);
+    const m = raw.match(/```json\s*([\s\S]+?)\s*```/) ?? raw.match(/\{[\s\S]+\}/);
+    return JSON.parse(m[1] ?? m[0]);
+  } catch (e) {
+    return { verdict: "caution", issues: [`검증 패스 실패: ${e.message}`], notes: "수동 검토 필요" };
+  }
 }
 
-function buildMdx(category, dateStr, draft) {
+function slugify(title) {
+  return title.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, "").replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 60);
+}
+
+// ── 5. codex 이미지 생성 ($0) ─────────────────────────────────────
+function genImage(imagePrompt, outPath) {
+  const dir = path.dirname(outPath), name = path.basename(outPath);
+  mkdirSync(dir, { recursive: true });
+  const instr = `Use your image_gen.imagegen tool to create this image: "${imagePrompt}". Photorealistic, 16:9 aspect ratio, no text/watermark. Save the returned image bytes as "${name}" in the current working directory (${dir}). Confirm file size when done.`;
+  execFileSync(CODEX, ["exec", "--skip-git-repo-check", "-s", "workspace-write", instr], {
+    cwd: dir, encoding: "utf8", maxBuffer: 20 * 1024 * 1024, timeout: 5 * 60 * 1000,
+  });
+  if (!existsSync(outPath) || statSync(outPath).size < 10000) throw new Error("이미지 생성 실패/너무 작음");
+}
+
+function buildMdx(topic, dateStr, draft, heroPath) {
   const tags = draft.tags.map((t) => `  - ${t}`).join("\n");
-  const sources = draft.sources
-    .map(
-      (s) =>
-        `  - title: ${JSON.stringify(s.title)}\n    url: ${s.url}\n    publisher: ${s.publisher ?? ""}`,
-    )
-    .join("\n");
-  const faq = draft.faq
-    .map(
-      (q) =>
-        `  - question: ${JSON.stringify(q.question)}\n    answer: ${JSON.stringify(q.answer)}`,
-    )
-    .join("\n");
+  const sources = draft.sources.map((s) => `  - title: ${JSON.stringify(s.title)}\n    url: ${s.url}\n    publisher: ${s.publisher ?? ""}`).join("\n");
+  const faq = draft.faq.map((q) => `  - question: ${JSON.stringify(q.question)}\n    answer: ${JSON.stringify(q.answer)}`).join("\n");
+  const hero = heroPath ? `hero_image: ${heroPath}\n` : "";
   return `---
 title: ${JSON.stringify(draft.title)}
 excerpt: ${JSON.stringify(draft.excerpt)}
-category: ${category}
+category: ${topic.category}
 tags:
 ${tags}
 author: purrpik-editor
 published_at: "${dateStr}"
+${hero}source_backlog: ${JSON.stringify(topic.question)}
 sources:
 ${sources}
 faq:
@@ -170,68 +253,79 @@ ${draft.body}
 `;
 }
 
-function git(args, cwd = REPO) {
-  return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
-}
+function git(args, cwd = REPO) { return execFileSync("git", args, { cwd, encoding: "utf8" }).trim(); }
 
 function main() {
   const args = process.argv.slice(2);
-  const force = args.includes("--force");
-  const catArg = args.find((a) => !a.startsWith("--"));
+  const dry = args.includes("--dry");
+  const noImage = args.includes("--no-image");
 
-  const dow = new Date().getDay();
-  const category = catArg ?? ROTATION[dow];
-  if (!category) {
-    log(`주말(요일 ${dow}) 휴재. 종료.`);
-    return;
-  }
-  if (!CATEGORIES[category]) {
-    log(`알 수 없는 카테고리: ${category}`);
-    process.exit(1);
-  }
+  const backlog = parseBacklog();
+  const done = writtenQuestions();
+  const topic = backlog.find((t) => !done.has(t.question));
+  if (!topic) { log("backlog 소진 — 새 질문 수집 필요. 종료."); return; }
+
   const dateStr = todayStr();
+  log(`주제: "${topic.question}" (빈도 ${topic.freq}, ${topic.category}${topic.needsVet ? ", 감수필요" : ""})`);
 
-  // 중복 가드: 오늘 날짜로 이미 그 카테고리 글이 있으면 skip (launchd 재실행 대비).
-  const catDir = path.join(REPO, "content", "articles", category);
-  if (existsSync(catDir) && readdirSync(catDir).some((f) => f.startsWith(dateStr))) {
-    log(`오늘(${dateStr}) ${category} 기사 이미 존재. skip.`);
+  const evidence = gatherEvidence(topic.question);
+  log(`근거 ${evidence.length}건 수집`);
+
+  const draft = parseDraft(claudeRun(buildPrompt(topic, evidence)));
+  const slug = slugify(draft.title);
+  log(`초안: "${draft.title}"`);
+
+  const check = verifyDraft(topic, draft);
+  log(`검증: ${check.verdict}${check.issues?.length ? " — " + check.issues.join("; ") : ""}`);
+
+  if (dry) {
+    console.log("\n===== MDX =====\n" + buildMdx(topic, dateStr, draft, null));
+    console.log("\n===== 검증 =====\n" + JSON.stringify(check, null, 2));
+    console.log("\n===== image_prompt =====\n" + draft.image_prompt);
     return;
   }
 
-  log(`생성 시작: ${dateStr} / ${category} (${CATEGORIES[category].label})`);
-  const raw = callClaude(buildPrompt(category, dateStr));
-  const draft = parseDraft(raw);
-  const slug = slugify(draft.title);
-  const mdx = buildMdx(category, dateStr, draft);
-  log(`초안 완성: "${draft.title}" (${mdx.length}자)`);
-
-  // worktree에서 커밋/푸시 (사용자 작업트리 무간섭).
+  // worktree
   git(["fetch", "origin", "main"]);
-  const branch = `article/${dateStr}-${category}`;
+  const branch = `article/${dateStr}-${topic.category}`;
   const wt = mkdtempSync(path.join(tmpdir(), "purrpik-article-"));
   try {
     git(["worktree", "add", "-B", branch, wt, "origin/main"]);
-    const relPath = path.join("content", "articles", category, `${dateStr}-${slug}.mdx`);
-    const absPath = path.join(wt, relPath);
-    mkdirSync(path.dirname(absPath), { recursive: true });
-    writeFileSync(absPath, mdx, "utf8");
-    git(["add", relPath], wt);
+
+    let heroRel = null;
+    if (!noImage && draft.image_prompt) {
+      try {
+        const imgName = `${dateStr}-${slug}.png`;
+        genImage(draft.image_prompt, path.join(wt, "public", "articles", imgName));
+        heroRel = `/articles/${imgName}`;
+        git(["add", `public/articles/${imgName}`], wt);
+        log(`이미지 생성 완료: ${heroRel}`);
+      } catch (e) { log(`⚠️ 이미지 생략 (${e.message})`); }
+    }
+
+    const rel = path.join("content", "articles", topic.category, `${dateStr}-${slug}.mdx`);
+    const abs = path.join(wt, rel);
+    mkdirSync(path.dirname(abs), { recursive: true });
+    writeFileSync(abs, buildMdx(topic, dateStr, draft, heroRel), "utf8");
+    git(["add", rel], wt);
     git(["commit", "-m", `feat(articles): ${draft.title}`], wt);
     git(["push", "-u", "origin", branch, "--force-with-lease"], wt);
 
-    const prBody = `자동 생성 매거진 초안 (Claude CLI OAuth, $0).\n\n**${CATEGORIES[category].label}** · ${dateStr}\n\n${draft.excerpt}\n\n---\nPreview 배포에서 렌더 확인 후 Merge하면 발행됩니다.`;
-    const prUrl = execFileSync(
-      "gh",
-      ["pr", "create", "--title", `[매거진] ${draft.title}`, "--body", prBody, "--base", "main", "--head", branch],
-      { cwd: wt, encoding: "utf8" },
-    ).trim();
-    log(`PR 생성 완료: ${prUrl}`);
+    const label = topic.needsVet ? "[매거진][감수필요] " : "[매거진] ";
+    const vetBanner = topic.needsVet ? "\n\n> ⚠️ **수의사 감수 필요** — 진단/치료성 내용. 수의사 확인 후 머지하세요.\n" : "";
+    const body = `실제 고빈도 질문(${topic.freq}회) 기반 자동 생성 (Claude+codex OAuth, $0).${vetBanner}
+
+**검증 결과: ${check.verdict}**
+${(check.issues || []).map((i) => `- ${i}`).join("\n") || "- 특이사항 없음"}
+
+${check.notes || ""}
+
+---
+Preview 배포에서 렌더 확인 후 Merge → 발행.`;
+    const prUrl = execFileSync("gh", ["pr", "create", "--title", `${label}${draft.title}`, "--body", body, "--base", "main", "--head", branch], { cwd: wt, encoding: "utf8" }).trim();
+    log(`PR: ${prUrl}`);
   } finally {
-    try {
-      git(["worktree", "remove", "--force", wt]);
-    } catch {
-      rmSync(wt, { recursive: true, force: true });
-    }
+    try { git(["worktree", "remove", "--force", wt]); } catch { rmSync(wt, { recursive: true, force: true }); }
   }
 }
 
