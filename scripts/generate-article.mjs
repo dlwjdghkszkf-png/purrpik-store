@@ -17,7 +17,7 @@
  *       node scripts/generate-article.mjs --no-image  (이미지 생략)
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync, statSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, rmSync, existsSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,6 +27,12 @@ const CORPUS_DIR = "/Users/ljh/Documents/자동화 프로그램/공통 인프라
 const CLAUDE = process.env.CLAUDE_BIN || "claude";
 const CODEX = process.env.CODEX_BIN || "codex";
 const MODEL = "sonnet";
+// 생성 이력 ledger (레포 밖 고정 경로): 미머지 PR 주제도 기록해 중복 생성 방지.
+// writtenQuestions()는 커밋된 mdx만 보므로, PR을 매일 머지 안 하면 같은 주제가 반복됨.
+const LEDGER = path.join(
+  process.env.HOME || REPO,
+  "Library/Application Support/purrpik-article/generated-questions.log",
+);
 
 // backlog 카테고리 → purrpik 카테고리.
 const CATEGORY_MAP = {
@@ -93,7 +99,24 @@ function writtenQuestions() {
       if (m) done.add(m[1].replace(/^["']|["']$/g, "").trim());
     }
   }
+  // ledger(미머지 PR 포함 생성 이력) 합치기 — 머지 안 해도 중복 방지.
+  if (existsSync(LEDGER)) {
+    for (const line of readFileSync(LEDGER, "utf8").split("\n")) {
+      const q = line.trim();
+      if (q) done.add(q);
+    }
+  }
   return done;
+}
+
+// 생성한 주제를 ledger에 기록 (PR 성공 후 호출).
+function recordGenerated(question) {
+  try {
+    mkdirSync(path.dirname(LEDGER), { recursive: true });
+    appendFileSync(LEDGER, question.trim() + "\n", "utf8");
+  } catch (e) {
+    log(`⚠️ ledger 기록 실패(무시): ${e.message}`);
+  }
 }
 
 // ── 2. raw JSON에서 주제 근거 추출 ────────────────────────────────
@@ -407,6 +430,7 @@ ${check.notes || ""}
 Preview 배포에서 렌더 확인 후 Merge → 발행.`;
     const prUrl = execFileSync("gh", ["pr", "create", "--title", `${label}${draft.title}`, "--body", body, "--base", "main", "--head", branch], { cwd: wt, encoding: "utf8" }).trim();
     log(`PR: ${prUrl}`);
+    recordGenerated(topic.question); // 중복 방지: 머지 전에도 생성 이력 남김
   } finally {
     try { git(["worktree", "remove", "--force", wt]); } catch { rmSync(wt, { recursive: true, force: true }); }
   }
