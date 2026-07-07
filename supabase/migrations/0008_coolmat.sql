@@ -29,7 +29,7 @@ insert into products (
   'dog',
   '/images/products/coolmat-hero.jpg',
   '["/images/products/coolmat-1.jpg","/images/products/coolmat-2.jpg","/images/products/coolmat-3.jpg","/images/products/coolmat-4.jpg"]'::jsonb,
-  '<img src="/images/products/coolmat-detail/01.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/02.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/03.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/04.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/05.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/06.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/07.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/08.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/09.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/10.jpg" style="width:100%;display:block"><img src="/images/products/coolmat-detail/11.jpg" style="width:100%;display:block">',
+  '<p>휴비스 정품 DURARON® 냉감원단 + FITI 시험연구원 접촉냉감 테스트 통과 인증서를 확보한 국내산 강아지쿨매트입니다. 4면 밴딩과 후면 미끄럼방지 처리로 세탁을 반복해도 밀림이 없고, 소형부터 초대형까지 4단계 실측 사이즈로 우리 아이 몸에 맞게 고를 수 있습니다.</p><p>상세 이미지는 아래 "상품 상세정보"에서 확인하세요.</p>',
   20,
   true, true,
   'dog-bedding',

@@ -9,6 +9,8 @@ import { ProductSummary } from "@/components/pdp/ProductSummary";
 import { OptionPicker } from "@/components/pdp/OptionPicker";
 import { SpecTable } from "@/components/pdp/SpecTable";
 import { Layer4Section } from "@/components/pdp/Layer4Section";
+import { ProductDetailImages } from "@/components/pdp/ProductDetailImages";
+import { getProductDetail } from "@/lib/product-detail";
 import { ReviewsSection } from "@/components/pdp/ReviewsSection";
 import { ReviewsHero } from "@/components/pdp/ReviewsHero";
 import { FaqSection } from "@/components/pdp/FaqSection";
@@ -248,8 +250,10 @@ export default async function ProductPage({
         </div>
       </div>
 
+      <ProductDetailImages productId={product.id} />
       <SpecTable product={product} variants={variants} />
-      {product.id === MASTER_ID && <Layer4Section />}
+      {/* 상세 이미지가 있는 상품은 일반 마케팅 섹션(Layer4) 생략 — 슬라이스가 대체 */}
+      {!getProductDetail(product.id) && <Layer4Section />}
       <ReviewsSection productId={product.id} reviews={reviews} />
       <FaqSection faqs={faqs} />
 
