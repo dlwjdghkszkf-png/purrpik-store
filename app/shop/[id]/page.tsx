@@ -22,7 +22,7 @@ type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 // Stage 18 — 마스터 1개 + 4 legacy SKU id (redirect용).
 const MASTER_ID = "purrpik-shelter";
 const LEGACY_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
-const VALID_MASTER_IDS = [MASTER_ID] as const;
+const VALID_MASTER_IDS = [MASTER_ID, "purrpik-coolmat"] as const;
 
 // force-dynamic: cookies() 사용한 createClient 때문에 prerender 시 fail → notFound 캐시되는 문제 회피.
 export const dynamic = "force-dynamic";
@@ -249,7 +249,7 @@ export default async function ProductPage({
       </div>
 
       <SpecTable product={product} variants={variants} />
-      <Layer4Section />
+      {product.id === MASTER_ID && <Layer4Section />}
       <ReviewsSection productId={product.id} reviews={reviews} />
       <FaqSection faqs={faqs} />
 
