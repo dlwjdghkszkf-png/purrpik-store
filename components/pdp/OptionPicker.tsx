@@ -105,14 +105,19 @@ export function OptionPicker({ product, variants, initialSku }: Props) {
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-small font-medium text-mute-1">
-                선택: {editionLabel(selectedSku.edition)} · {selectedSku.size}
+                선택:{" "}
+                {selectedSku.edition
+                  ? `${editionLabel(selectedSku.edition)} · `
+                  : ""}
+                {selectedSku.size}
               </p>
               <p className="text-h3 font-semibold tabular-nums text-ink">
                 {formatPrice(selectedSku.price)}
               </p>
             </div>
             <p className="text-[11px] text-mute-2">
-              외부 {selectedSku.size_outer} · 입구 {selectedSku.size_entry}
+              외부 {selectedSku.size_outer}
+              {selectedSku.size_entry ? ` · 입구 ${selectedSku.size_entry}` : ""}
             </p>
             <p className="text-[11px] text-mute-2">
               구성: {selectedSku.includes.join(" + ")}
