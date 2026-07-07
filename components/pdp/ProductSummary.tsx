@@ -9,12 +9,28 @@ import {
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
-const MERITS = [
-  "전국 무료배송",
-  "30일 만족보증 환불",
-  "60초 설치 — 도구·접착제 불필요",
-  "4중 구조 · 자체 시험 검증",
-];
+// 상품별 eyebrow · 핵심혜택 (fallback = 공통). shelter 전용 문구가 타 상품에 새지 않도록.
+const SUMMARY_META: Record<string, { eyebrow: string; merits: string[] }> = {
+  "purrpik-shelter": {
+    eyebrow: "SHELTER",
+    merits: [
+      "전국 무료배송",
+      "30일 만족보증 환불",
+      "60초 설치 — 도구·접착제 불필요",
+      "4중 구조 · 자체 시험 검증",
+    ],
+  },
+  "purrpik-coolmat": {
+    eyebrow: "COOL MAT",
+    merits: [
+      "전국 무료배송",
+      "30일 만족보증 환불",
+      "FITI 접촉냉감 인증 원단",
+      "국내산 휴비스 듀라론 · 4면 밴딩",
+    ],
+  },
+};
+const DEFAULT_MERITS = ["전국 무료배송", "30일 만족보증 환불"];
 
 /**
  * ProductSummary — PDP 우측 상단 핵심 정보 (RSC).
@@ -26,9 +42,11 @@ export function ProductSummary({ product }: { product: ProductRow }) {
   const variants = parseVariants(product.variants);
   const isMaster = product.is_master && variants !== null;
 
+  const meta = SUMMARY_META[product.id];
   const topLabel = isMaster
-    ? `SHELTER · ${variants?.skus.length ?? 0} 옵션`
+    ? `${meta?.eyebrow ?? "PURRPIK"} · ${variants?.skus.length ?? 0} 옵션`
     : editionLabel(product.edition);
+  const merits = meta?.merits ?? DEFAULT_MERITS;
 
   const priceDisplay = isMaster
     ? formatPriceRange(
@@ -61,7 +79,7 @@ export function ProductSummary({ product }: { product: ProductRow }) {
       )}
 
       <ul className="mt-6 space-y-2">
-        {MERITS.map((m) => (
+        {merits.map((m) => (
           <li
             key={m}
             className="flex items-start gap-2 text-small text-ink"
