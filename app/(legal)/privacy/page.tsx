@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침 — 푸르픽",
-  description: "푸르픽 개인정보처리방침 (placeholder, 사용자 보완 예정).",
+  description: "푸르픽 개인정보처리방침.",
   robots: { index: false, follow: false },
 };
 
@@ -15,11 +15,6 @@ export default function PrivacyPage() {
       <p className="mt-3 text-small text-mute-2">
         시행일: 2026년 9월 11일 (개정 PIPA 시행일 기준)
       </p>
-      <p className="mt-2 text-small text-mute-2">
-        * 본 문서는 placeholder입니다. 실제 사업자 정보 및 법률 검토는 사용자가
-        보완 예정.
-      </p>
-
       <div className="mt-10 flex flex-col gap-10 text-mute-1 leading-relaxed">
         <section>
           <h2 className="text-xl font-semibold text-ink">1. 수집하는 개인정보 항목</h2>
@@ -89,7 +84,9 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl font-semibold text-ink">7. 연락처</h2>
           <p className="mt-3">
-            개인정보 보호책임자: (placeholder)
+            개인정보 보호책임자: 이정환 (대표)
+            <br />
+            연락처: 010-2058-0176
             <br />
             이메일: help@purrpik.co.kr
           </p>
