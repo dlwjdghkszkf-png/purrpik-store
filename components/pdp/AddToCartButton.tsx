@@ -40,7 +40,9 @@ export function AddToCartButton({
   const disabled = !selectedSku || pending;
 
   const variantLabel = selectedSku
-    ? `${editionLabel(selectedSku.edition)} ${selectedSku.size}`
+    ? selectedSku.edition
+      ? `${editionLabel(selectedSku.edition)} ${selectedSku.size}`
+      : selectedSku.size
     : "";
   const itemName = selectedSku
     ? `${product.name} · ${variantLabel}`

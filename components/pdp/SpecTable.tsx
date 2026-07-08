@@ -50,9 +50,11 @@ function VariantsComparisonTable({
               <th className="w-[120px] px-4 py-3 text-mute-1">항목</th>
               {variants.skus.map((sku) => (
                 <th key={sku.id} className="px-4 py-3 text-ink">
-                  <div className="font-semibold uppercase tracking-wider text-brand-mustard">
-                    {editionLabel(sku.edition)}
-                  </div>
+                  {sku.edition && (
+                    <div className="font-semibold uppercase tracking-wider text-brand-mustard">
+                      {editionLabel(sku.edition)}
+                    </div>
+                  )}
                   <div className="text-base font-bold">{sku.size}</div>
                 </th>
               ))}
