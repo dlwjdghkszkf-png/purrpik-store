@@ -11,6 +11,7 @@ import {
 } from "@/components/checkout/AddressForm";
 import { OrderReview } from "@/components/checkout/OrderReview";
 import { TossWidget } from "@/components/checkout/TossWidget";
+import { BankTransferPanel } from "@/components/checkout/BankTransferPanel";
 import {
   selectCartSubtotal,
   useCartStore,
@@ -27,6 +28,8 @@ export default function CheckoutPage() {
 
   const [hydrated, setHydrated] = useState(false);
   const [address, setAddress] = useState<AddressFormValue>(EMPTY_ADDRESS);
+  // 결제 수단 — 무통장입금 기본 (토스 카드결제는 PG 심사 후 사용).
+  const [payMethod, setPayMethod] = useState<"bank" | "card">("bank");
 
   // 페이지 라이프타임 동안 안정적인 orderId — 새로고침 시 새로 생성.
   const orderId = useMemo(() => generateOrderNo(), []);
@@ -77,6 +80,22 @@ export default function CheckoutPage() {
       : `${items[0].name} 외 ${items.length - 1}건`;
   const firstItem = items[0];
   const ready = isFormReady(address);
+  const orderInfo = {
+    orderId,
+    orderName,
+    customerName: address.name || "구매자",
+    customerEmail: address.email || undefined,
+    customerMobilePhone: address.phone.replace(/-/g, "") || undefined,
+    productId: firstItem.productId,
+    variantId: firstItem.variantId ?? null,
+    quantity: firstItem.quantity,
+    ship: {
+      zipcode: address.zipcode,
+      address1: address.address1,
+      address2: address.address2,
+      memo: address.memo || undefined,
+    },
+  };
 
   return (
     <>
@@ -114,27 +133,49 @@ export default function CheckoutPage() {
 
           <div className="space-y-6 lg:sticky lg:top-24">
             <OrderReview />
-            <TossWidget
-              amount={subtotal}
-              ready={ready}
-              orderInfo={{
-                orderId,
-                orderName,
-                customerName: address.name || "구매자",
-                customerEmail: address.email || undefined,
-                customerMobilePhone:
-                  address.phone.replace(/-/g, "") || undefined,
-                productId: firstItem.productId,
-                variantId: firstItem.variantId ?? null,
-                quantity: firstItem.quantity,
-                ship: {
-                  zipcode: address.zipcode,
-                  address1: address.address1,
-                  address2: address.address2,
-                  memo: address.memo || undefined,
-                },
-              }}
-            />
+
+            {/* 결제 수단 선택 */}
+            <div className="rounded-lg border border-line p-4">
+              <p className="mb-3 text-small font-semibold">결제 수단</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPayMethod("bank")}
+                  className={`rounded-md border py-2.5 text-small font-medium transition ${
+                    payMethod === "bank"
+                      ? "border-ink bg-ink text-white"
+                      : "border-line text-mute-1 hover:border-ink"
+                  }`}
+                >
+                  무통장입금
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPayMethod("card")}
+                  className={`rounded-md border py-2.5 text-small font-medium transition ${
+                    payMethod === "card"
+                      ? "border-ink bg-ink text-white"
+                      : "border-line text-mute-1 hover:border-ink"
+                  }`}
+                >
+                  카드결제
+                </button>
+              </div>
+            </div>
+
+            {payMethod === "bank" ? (
+              <BankTransferPanel
+                amount={subtotal}
+                ready={ready}
+                orderInfo={orderInfo}
+              />
+            ) : (
+              <TossWidget
+                amount={subtotal}
+                ready={ready}
+                orderInfo={orderInfo}
+              />
+            )}
           </div>
         </div>
       </section>

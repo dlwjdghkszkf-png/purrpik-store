@@ -178,6 +178,7 @@ export interface Database {
           status: OrderStatus;
           toss_payment_key: string | null;
           toss_order_id: string | null;
+          payment_method: string;
           toss_paid_at: string | null;
           alimtalk_sent_at: string | null;
           alimtalk_attempts: number;
@@ -201,6 +202,7 @@ export interface Database {
           status?: OrderStatus;
           toss_payment_key?: string | null;
           toss_order_id?: string | null;
+          payment_method?: string;
           toss_paid_at?: string | null;
           alimtalk_sent_at?: string | null;
           alimtalk_attempts?: number;
@@ -224,6 +226,7 @@ export interface Database {
           status?: OrderStatus;
           toss_payment_key?: string | null;
           toss_order_id?: string | null;
+          payment_method?: string;
           toss_paid_at?: string | null;
           alimtalk_sent_at?: string | null;
           alimtalk_attempts?: number;
