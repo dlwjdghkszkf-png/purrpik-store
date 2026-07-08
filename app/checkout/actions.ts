@@ -9,6 +9,8 @@ export interface CreatePendingOrderInput {
   variantId?: string | null;
   quantity: number; // 첫 item 수량 (대표값)
   amount: number; // 카트 합계
+  /** 'card' = 토스 카드결제 / 'bank_transfer' = 무통장입금. 기본 card. */
+  paymentMethod?: "card" | "bank_transfer";
   buyer: { name: string; phone: string; email: string };
   ship: {
     zipcode: string;
@@ -71,6 +73,10 @@ export async function createPendingOrder(
       ship_address1: input.ship.address1,
       ship_address2: input.ship.address2 || null,
       ship_memo: input.ship.memo ?? null,
+      // payment_method는 bank_transfer일 때만 명시 (card는 DB default). 컬럼 미존재 환경서 카드주문 보호.
+      ...(input.paymentMethod === "bank_transfer"
+        ? { payment_method: "bank_transfer" }
+        : {}),
     });
     if (error) {
       console.warn("[createPendingOrder] insert error:", error.message);
