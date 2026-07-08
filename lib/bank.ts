@@ -3,9 +3,9 @@
  * ⚠️ 실제 값은 사용자 계좌로 교체해야 함. placeholder면 BANK_CONFIGURED=false.
  */
 export const BANK_INFO = {
-  bank: "____은행", // TODO: 실제 은행명
-  account: "0000000000000", // TODO: 실제 계좌번호 (숫자만)
-  holder: "제이에이치컴퍼니", // 예금주
+  bank: "KB국민",
+  account: "933502-00-332849",
+  holder: "이정환",
 };
 
 /** placeholder 여부 — 미설정 시 무통장 안내에 '고객센터 문의' 폴백. */
