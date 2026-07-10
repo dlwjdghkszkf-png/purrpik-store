@@ -9,6 +9,7 @@ import {
   formatPrice,
 } from "@/lib/products/format";
 import { AddToCartButton } from "./AddToCartButton";
+import { NaverPayButton } from "./NaverPayButton";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
@@ -159,6 +160,11 @@ export function OptionPicker({ product, variants, initialSku }: Props) {
       </div>
 
       <AddToCartButton
+        product={product}
+        selectedSku={selectedSku ?? null}
+        quantity={qty}
+      />
+      <NaverPayButton
         product={product}
         selectedSku={selectedSku ?? null}
         quantity={qty}
