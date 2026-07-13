@@ -9,12 +9,12 @@ import { withSentryConfig } from "@sentry/nextjs";
  */
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.tosspayments.com https://www.googletagmanager.com https://connect.facebook.net https://t1.kakaocdn.net https://t1.daumcdn.net https://*.daum.net",
-  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://t1.daumcdn.net",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.tosspayments.com https://www.googletagmanager.com https://connect.facebook.net https://t1.kakaocdn.net https://t1.daumcdn.net https://*.daum.net https://*.kakao.com",
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://t1.daumcdn.net https://*.daumcdn.net",
   "font-src 'self' https://cdn.jsdelivr.net data:",
-  "img-src 'self' data: blob: https: https://*.tosspayments.com https://www.google-analytics.com https://www.facebook.com https://*.daum.net https://*.kakaocdn.net",
-  "connect-src 'self' https://*.supabase.co https://api.tosspayments.com https://www.google-analytics.com https://*.facebook.com https://*.sentry.io https://api.solapi.com",
-  "frame-src https://js.tosspayments.com https://*.tosspayments.com https://postcode.map.daum.net",
+  "img-src 'self' data: blob: https: https://*.tosspayments.com https://www.google-analytics.com https://www.facebook.com https://*.daum.net https://*.kakaocdn.net https://*.daumcdn.net https://*.kakao.com",
+  "connect-src 'self' https://*.supabase.co https://api.tosspayments.com https://www.google-analytics.com https://*.facebook.com https://*.sentry.io https://api.solapi.com https://*.daum.net https://*.kakao.com",
+  "frame-src https://js.tosspayments.com https://*.tosspayments.com https://postcode.map.daum.net https://*.daumcdn.net https://*.daum.net https://*.kakao.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
