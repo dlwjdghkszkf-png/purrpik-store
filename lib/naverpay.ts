@@ -7,10 +7,13 @@
  * - 표 3-2~3-5: XML 요소 스펙
  */
 
-export const NAVERPAY_ORDER_REGISTER_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://api.pay.naver.com/o/customer/api/order/v20/register"
-    : "https://test-api.pay.naver.com/o/customer/api/order/v20/register";
+// 네이버페이 검수 완료 전까지 SANDBOX 고정.
+// 최종승인 후: NAVERPAY_SANDBOX=false 로 env 설정 or 이 줄 제거.
+const NAVERPAY_SANDBOX = process.env.NAVERPAY_SANDBOX !== "false";
+
+export const NAVERPAY_ORDER_REGISTER_URL = NAVERPAY_SANDBOX
+  ? "https://test-api.pay.naver.com/o/customer/api/order/v20/register"
+  : "https://api.pay.naver.com/o/customer/api/order/v20/register";
 
 function xmlEscape(v: string | number): string {
   return String(v)

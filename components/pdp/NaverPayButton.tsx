@@ -8,10 +8,12 @@ type Sku = ProductVariants["skus"][number];
 
 const BUTTON_KEY = process.env.NEXT_PUBLIC_NAVERPAY_BUTTON_KEY ?? "";
 const SDK_ID = "naverpay-button-sdk";
-const SDK_SRC =
-  process.env.NODE_ENV === "production"
-    ? "https://npay-order.pstatic.net/assets/button/latest/npay.button.js"
-    : "https://test-pay.naver.com/assets/button/latest/npay.button.js";
+// 네이버페이 검수 완료 전까지 SANDBOX SDK 고정.
+// 최종승인 후: NEXT_PUBLIC_NAVERPAY_SANDBOX=false 로 env 설정.
+const SANDBOX = process.env.NEXT_PUBLIC_NAVERPAY_SANDBOX !== "false";
+const SDK_SRC = SANDBOX
+  ? "https://test-pay.naver.com/assets/button/latest/npay.button.js"
+  : "https://npay-order.pstatic.net/assets/button/latest/npay.button.js";
 
 interface NpayOrderCreateOptions {
   buttonKey: string;
