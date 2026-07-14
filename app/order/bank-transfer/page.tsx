@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 import { BANK_INFO, BANK_CONFIGURED, BANK_DEADLINE_DAYS } from "@/lib/bank";
+import { ClearCartOnMount } from "@/components/checkout/ClearCartOnMount";
 
 export const metadata: Metadata = {
   title: "무통장입금 안내 — 푸르픽",
@@ -33,6 +34,7 @@ export default async function BankTransferPage({
 
   return (
     <div className="container-page max-w-xl py-16">
+      <ClearCartOnMount />
       <div className="rounded-2xl border border-line p-8 text-center">
         <div className="text-4xl">🧾</div>
         <h1 className="mt-4 text-2xl font-bold">주문이 접수됐어요</h1>

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPendingOrder } from "@/app/checkout/actions";
-import { useCartStore } from "@/lib/cart/store";
 import type { TossOrderInfo } from "./TossWidget";
 
 /**
@@ -20,7 +19,6 @@ export function BankTransferPanel({
   orderInfo: TossOrderInfo;
 }) {
   const router = useRouter();
-  const clearCart = useCartStore((s) => s.clear);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +45,8 @@ export function BankTransferPanel({
       setSubmitting(false);
       return;
     }
-    clearCart();
+    // 장바구니 비우기는 완료 페이지(ClearCartOnMount)에서 — 여기서 비우면
+    // 체크아웃의 빈 장바구니 리다이렉트와 경쟁해 /cart로 튕긴다.
     router.push(
       `/order/bank-transfer?orderId=${encodeURIComponent(orderInfo.orderId)}`,
     );
