@@ -87,7 +87,7 @@ export function PetGate() {
 
       <div className="mt-10 md:mt-12 text-center">
         <Link
-          href="/cat"
+          href="/shop?pet_type=cat"
           prefetch={false}
           className="text-xs md:text-sm text-mute-2 hover:text-ink transition-colors underline-offset-4 hover:underline"
         >

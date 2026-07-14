@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const COL_SHOP = [
   { label: "전체 상품", href: "/shop" },
-  { label: "고양이", href: "/cat" },
+  { label: "고양이", href: "/shop?pet_type=cat" },
   { label: "강아지", href: "/dog" },
   { label: "강아지·고양이 둘 다", href: "/both" },
   { label: "푸르픽 길고양이집", href: "/shop/purrpik-shelter" },
