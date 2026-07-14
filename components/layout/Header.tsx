@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Package, Search, ShoppingBag } from "lucide-react";
 import { MegaMenu } from "./MegaMenu";
 import { PetTypeBadge } from "./PetTypeBadge";
+import { AccountLink } from "./AccountLink";
 import { selectCartCount, useCartStore } from "@/lib/cart/store";
 
 export function Header() {
@@ -61,6 +62,8 @@ export function Header() {
                 주문조회
               </span>
             </Link>
+
+            <AccountLink />
 
             <button
               type="button"
