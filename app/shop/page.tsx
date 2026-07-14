@@ -36,12 +36,13 @@ async function fetchMasterProducts(
       .eq("is_master", true)
       .order("display_order", { ascending: true });
 
-    if (
-      filters.pet_type === "cat" ||
-      filters.pet_type === "dog" ||
-      filters.pet_type === "both"
-    ) {
-      query = query.eq("pet_type", filters.pet_type);
+    // 'both'(공용) 상품은 고양이·강아지 필터 양쪽에 노출. '둘 다' 필터는 both 전용만.
+    if (filters.pet_type === "cat") {
+      query = query.in("pet_type", ["cat", "both"]);
+    } else if (filters.pet_type === "dog") {
+      query = query.in("pet_type", ["dog", "both"]);
+    } else if (filters.pet_type === "both") {
+      query = query.eq("pet_type", "both");
     }
 
     const { data, error } = await query;
