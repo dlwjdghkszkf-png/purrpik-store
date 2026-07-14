@@ -46,9 +46,9 @@ const PET_PANELS: PetPanelItem[] = [
     type: "cat",
     title: "고양이",
     desc: "4중 구조 야외 셸터 4 에디션",
-    href: "/cat",
+    href: "/shop?pet_type=cat",
     ctaLabel: "고양이 전체",
-    ctaHref: "/cat",
+    ctaHref: "/shop?pet_type=cat",
     icon: Cat,
   },
   {

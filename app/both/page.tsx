@@ -85,7 +85,7 @@ export default async function BothHome() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href="/cat"
+                href="/shop?pet_type=cat"
                 className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-md bg-brand-mustard text-white font-semibold hover:bg-brand-mustard-deep transition-colors"
               >
                 고양이 제품 보기

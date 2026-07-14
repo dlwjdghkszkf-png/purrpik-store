@@ -198,7 +198,7 @@ export function ComingSoonHero() {
           인스타그램 팔로우
         </a>
         <Link
-          href="/cat"
+          href="/shop?pet_type=cat"
           className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-md border border-line bg-white text-sm font-medium text-ink hover:border-ink transition-colors"
         >
           고양이 제품 보기
