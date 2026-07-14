@@ -53,7 +53,7 @@ export const petTypeLabel: Record<PetType, string> = {
 
 /** PetType → 해당 카테고리 홈 경로 */
 export const petTypeHref: Record<PetType, string> = {
-  cat: "/cat",
+  cat: "/shop?pet_type=cat",
   dog: "/dog",
   both: "/both",
 };
