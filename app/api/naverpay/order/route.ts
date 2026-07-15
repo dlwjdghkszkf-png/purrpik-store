@@ -36,10 +36,11 @@ export async function POST(req: NextRequest) {
 
   const productId = typeof body.productId === "string" ? body.productId : "";
   const variantId = typeof body.variantId === "string" ? body.variantId : "";
-  const quantity =
-    typeof body.quantity === "number" && body.quantity > 0
-      ? Math.floor(body.quantity)
-      : 1;
+  // 유효 정수만 허용 + 네이버페이 허용 범위(1~999)로 클램프. Infinity/음수/소수 방어.
+  const rawQty = typeof body.quantity === "number" ? body.quantity : 1;
+  const quantity = Number.isFinite(rawQty)
+    ? Math.min(999, Math.max(1, Math.floor(rawQty)))
+    : 1;
 
   if (!productId) {
     return NextResponse.json({ error: "productId 누락" }, { status: 400 });
@@ -59,6 +60,15 @@ export async function POST(req: NextRequest) {
   const product = data[0];
   const variants = parseVariants(product.variants);
   const sku = variants?.skus.find((s) => s.id === variantId);
+
+  // 옵션(SKU) 있는 상품인데 유효한 variantId가 아니면 거부 — 잘못된 가격/SKU 등록 방지.
+  const hasSkus = (variants?.skus?.length ?? 0) > 0;
+  if (hasSkus && !sku) {
+    return NextResponse.json(
+      { error: "유효하지 않은 옵션(variantId)입니다" },
+      { status: 400 },
+    );
+  }
 
   const price = sku?.price ?? product.price;
   const skuLabel = sku
@@ -89,8 +99,9 @@ export async function POST(req: NextRequest) {
   }
 
   // orderRegistrationVersion '2.1' 버튼 SDK가 기대하는 반환 형식.
+  // merchantNo는 등록 응답값을 그대로 전달(응답에 없을 때만 센터ID 폴백).
   return NextResponse.json({
     key: result.key,
-    merchantNo: process.env.NAVERPAY_CENTER_ID,
+    merchantNo: result.merchantNo ?? process.env.NAVERPAY_CENTER_ID,
   });
 }

@@ -35,19 +35,12 @@ export interface NaverPayOrderInput {
 }
 
 /**
- * 주문 정보 등록 request XML 빌드.
+ * 단일 <product> 요소 XML 빌드.
  * 전 상품 무료배송(사이트 정책) → shippingPolicy는 FREE 고정.
+ * 옵션 없는 본상품 형태(single/quantity) — 우리 SKU 모델은 옵션조합이 이미 단일 SKU로 확정됨.
  */
-export function buildOrderRegisterXml(input: NaverPayOrderInput): string {
-  const merchantId = process.env.NAVERPAY_CENTER_ID;
-  const certiKey = process.env.NAVERPAY_MERCHANT_KEY;
-  if (!merchantId || !certiKey) {
-    throw new Error("NAVERPAY_CENTER_ID/NAVERPAY_MERCHANT_KEY 미설정");
-  }
-
-  return `<?xml version="1.0" encoding="utf-8"?>
-<order>
-  <product>
+function buildProductXml(input: NaverPayOrderInput): string {
+  return `  <product>
     <id>${xmlEscape(input.productId)}</id>
     <name>${xmlEscape(input.name)}</name>
     <basePrice>${input.basePrice}</basePrice>
@@ -63,9 +56,42 @@ export function buildOrderRegisterXml(input: NaverPayOrderInput): string {
       <feePayType>FREE</feePayType>
       <feePrice>0</feePrice>
     </shippingPolicy>
-  </product>
+  </product>`;
+}
+
+/**
+ * 주문 정보 등록 request XML 빌드.
+ * 상품 상세(단일) + 장바구니(복수 <product>) 공용 — v2.1 스펙: <order> 안에 <product> 여러 개 허용.
+ */
+export function buildOrderRegisterXml(
+  products: NaverPayOrderInput[],
+  backUrl: string,
+): string {
+  const merchantId = process.env.NAVERPAY_CENTER_ID;
+  const certiKey = process.env.NAVERPAY_MERCHANT_KEY;
+  if (!merchantId || !certiKey) {
+    throw new Error("NAVERPAY_CENTER_ID/NAVERPAY_MERCHANT_KEY 미설정");
+  }
+  if (products.length === 0) {
+    throw new Error("주문 상품이 비어있습니다");
+  }
+  // XML 주입 방지 + 스펙 준수 — 숫자 필드는 안전한 정수만 허용.
+  for (const p of products) {
+    if (!Number.isSafeInteger(p.basePrice) || p.basePrice < 0) {
+      throw new Error(`basePrice 오류: ${p.basePrice}`);
+    }
+    if (!Number.isSafeInteger(p.quantity) || p.quantity < 1) {
+      throw new Error(`quantity 오류: ${p.quantity}`);
+    }
+  }
+
+  const productsXml = products.map(buildProductXml).join("\n");
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<order>
+${productsXml}
   <merchantId>${xmlEscape(merchantId)}</merchantId>
-  <backUrl>${xmlEscape(input.backUrl)}</backUrl>
+  <backUrl>${xmlEscape(backUrl)}</backUrl>
   <certiKey>${xmlEscape(certiKey)}</certiKey>
 </order>`;
 }
@@ -73,34 +99,78 @@ export function buildOrderRegisterXml(input: NaverPayOrderInput): string {
 export interface NaverPayOrderResult {
   ok: boolean;
   key?: string; // response 인증키 (영문+숫자, 최대 19자)
+  merchantNo?: string; // 응답의 가맹점번호 (버튼 SDK가 기대) — NAVERPAY_CENTER_ID로 임의대체 금지
   error?: string;
 }
 
-/** 네이버페이 주문 정보 등록 API 호출 (서버사이드). */
-export async function registerNaverPayOrder(
-  input: NaverPayOrderInput,
-): Promise<NaverPayOrderResult> {
-  const xml = buildOrderRegisterXml(input);
+/**
+ * 주문 등록 XML을 네이버페이 API로 POST하고 응답 파싱.
+ * v2.1 응답 포맷(가이드 §주문등록 응답): 콜론 구분 텍스트 — XML 아님.
+ *  - 성공: `SUCCESS:인증키:가맹점번호`
+ *  - 실패: `FAIL:[에러코드]실패메시지`
+ * (HTTP 상태와 무관하게 body 접두사로 성공/실패 판별.)
+ */
+async function postOrderRegister(xml: string): Promise<NaverPayOrderResult> {
   try {
     const res = await fetch(NAVERPAY_ORDER_REGISTER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/xml; charset=UTF-8" },
       body: xml,
     });
-    const text = await res.text();
-    if (!res.ok) {
-      return { ok: false, error: `HTTP ${res.status}: ${text.slice(0, 300)}` };
+    const text = (await res.text()).trim();
+
+    if (text.startsWith("SUCCESS:")) {
+      // 인증키/가맹점번호 모두 콜론을 포함하지 않음(인증키=영숫자, 가맹점번호=np_...).
+      const parts = text.split(":");
+      const key = parts[1]?.trim();
+      const merchantNo = parts[2]?.trim();
+      if (!key) {
+        return { ok: false, error: `인증키 파싱 실패: ${text.slice(0, 300)}` };
+      }
+      return { ok: true, key, merchantNo: merchantNo || undefined };
     }
-    // response 포맷 미확정(sandbox 실측 전) — <certiKey>, <key>, <authKey> 등 후보를 관대하게 탐색.
-    const m =
-      text.match(/<certiKey>([^<]+)<\/certiKey>/) ??
-      text.match(/<key>([^<]+)<\/key>/) ??
-      text.match(/<authKey>([^<]+)<\/authKey>/);
-    if (!m) {
-      return { ok: false, error: `인증키 파싱 실패: ${text.slice(0, 300)}` };
-    }
-    return { ok: true, key: m[1] };
+
+    // FAIL:[코드]메시지 또는 예상외 응답(HTTP 4xx/5xx 포함).
+    return {
+      ok: false,
+      error: res.ok
+        ? text.slice(0, 300)
+        : `HTTP ${res.status}: ${text.slice(0, 300)}`,
+    };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
+}
+
+/** 단일 상품 주문 등록 (상품 상세 페이지 [구매하기]). */
+export async function registerNaverPayOrder(
+  input: NaverPayOrderInput,
+): Promise<NaverPayOrderResult> {
+  let xml: string;
+  try {
+    xml = buildOrderRegisterXml([input], input.backUrl);
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+  return postOrderRegister(xml);
+}
+
+/**
+ * 장바구니 주문 등록 (장바구니 페이지 [구매하기]) — 복수 상품 한 주문으로 등록.
+ * backUrl은 장바구니/주문 완료 복귀 URL.
+ */
+export async function registerNaverPayCartOrder(
+  items: NaverPayOrderInput[],
+  backUrl: string,
+): Promise<NaverPayOrderResult> {
+  if (items.length === 0) {
+    return { ok: false, error: "장바구니가 비어있습니다" };
+  }
+  let xml: string;
+  try {
+    xml = buildOrderRegisterXml(items, backUrl);
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+  return postOrderRegister(xml);
 }

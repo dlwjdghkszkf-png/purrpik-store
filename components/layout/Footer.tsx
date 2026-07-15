@@ -298,6 +298,16 @@ export function Footer() {
           <p className="text-[11px] text-mute-2 leading-relaxed">
             고객문의 010-2058-0176 · help@purrpik.co.kr
           </p>
+          <p className="text-[11px] text-mute-2 leading-relaxed">
+            <a
+              href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=2631302666"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-ink transition-colors"
+            >
+              사업자정보확인
+            </a>
+          </p>
           <p className="text-[11px] text-mute-2">
             © 2026 푸르픽. All rights reserved.
           </p>

@@ -47,6 +47,21 @@ export default function BusinessInfoPage() {
         </table>
       </div>
 
+      <div className="mt-6">
+        <a
+          href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=2631302666"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-line bg-white px-4 py-2.5 text-small font-medium text-ink transition-colors hover:border-ink"
+        >
+          사업자정보확인
+          <span className="text-mute-2">↗</span>
+        </a>
+        <p className="mt-2 text-[11px] text-mute-2">
+          공정거래위원회 통신판매사업자 정보를 새 창에서 조회합니다.
+        </p>
+      </div>
+
       <p className="mt-6 text-small text-mute-2">
         본 사이트는 <strong className="text-ink">전자상거래 등에서의 소비자보호에 관한 법률</strong>에 따른
         통신판매업자입니다. 결제·환불 관련 문의는 help@purrpik.co.kr로 보내주세요.

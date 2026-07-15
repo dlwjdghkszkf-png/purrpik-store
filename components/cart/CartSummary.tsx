@@ -9,6 +9,7 @@ import {
 } from "@/lib/cart/store";
 import { formatPrice } from "@/lib/products/format";
 import { FreeShippingProgress } from "./FreeShippingProgress";
+import { NaverPayCartButton } from "./NaverPayCartButton";
 
 export function CartSummary() {
   const subtotal = useCartStore(selectCartSubtotal);
@@ -61,6 +62,7 @@ export function CartSummary() {
         >
           <Link href="/shop">쇼핑 계속하기</Link>
         </Button>
+        <NaverPayCartButton />
       </div>
 
       <p className="mt-5 text-xs text-mute-2 leading-relaxed">

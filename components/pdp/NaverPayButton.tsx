@@ -2,40 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import type { Database, ProductVariants } from "@/lib/supabase/types";
+import { NAVERPAY_BUTTON_KEY, mountNpayButton } from "@/lib/naverpay-client";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 type Sku = ProductVariants["skus"][number];
 
-const BUTTON_KEY = process.env.NEXT_PUBLIC_NAVERPAY_BUTTON_KEY ?? "";
-const SDK_ID = "naverpay-button-sdk";
-// 네이버페이 검수 완료 전까지 SANDBOX SDK 고정.
-// 최종승인 후: NEXT_PUBLIC_NAVERPAY_SANDBOX=false 로 env 설정.
-const SANDBOX = process.env.NEXT_PUBLIC_NAVERPAY_SANDBOX !== "false";
-const SDK_SRC = SANDBOX
-  ? "https://test-pay.naver.com/assets/button/latest/npay.button.js"
-  : "https://npay-order.pstatic.net/assets/button/latest/npay.button.js";
-
-interface NpayOrderCreateOptions {
-  buttonKey: string;
-  containerId: string;
-  orderRegistrationVersion: "2.1";
-  type: "template";
-  colorTheme: "green" | "white";
-  enable: boolean;
-  components: {
-    talkTalk: boolean;
-    wishlist: boolean;
-    benefitMessage: boolean;
-    benefitCoachMark: boolean;
-  };
-  onBuyClick: () => Promise<{ key: string; merchantNo?: string }>;
-}
-
-declare global {
-  interface Window {
-    Npay?: { order: { create: (opts: NpayOrderCreateOptions) => void } };
-  }
-}
+const BUTTON_KEY = NAVERPAY_BUTTON_KEY;
 
 /**
  * 네이버페이 [구매하기] 버튼 (네이버페이 주문형 — 구매정보 연동).
@@ -58,58 +30,40 @@ export function NaverPayButton({
 
   useEffect(() => {
     if (!BUTTON_KEY) return;
-
-    function init() {
-      window.Npay?.order.create({
-        buttonKey: BUTTON_KEY,
-        containerId,
-        orderRegistrationVersion: "2.1",
-        type: "template",
-        colorTheme: "green",
-        enable: !!stateRef.current.selectedSku,
-        components: {
-          talkTalk: false, // 네이버 톡톡 미연동
-          wishlist: false, // 찜 정보 연동 별도 구현 전
-          benefitMessage: true,
-          benefitCoachMark: true,
-        },
-        onBuyClick: async () => {
-          const { productId, selectedSku: sku, quantity: qty } =
-            stateRef.current;
-          const res = await fetch("/api/naverpay/order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              productId,
-              variantId: sku?.id,
-              quantity: qty,
-            }),
-          });
-          if (!res.ok) {
-            throw new Error("네이버페이 주문 등록 실패");
-          }
-          const data = await res.json();
-          return { key: data.key, merchantNo: data.merchantNo };
-        },
-      });
-    }
-
-    if (window.Npay) {
-      init();
-      return;
-    }
-    let script = document.getElementById(SDK_ID) as HTMLScriptElement | null;
-    if (!script) {
-      script = document.createElement("script");
-      script.id = SDK_ID;
-      script.src = SDK_SRC;
-      script.async = true;
-      document.head.appendChild(script);
-    }
-    script.addEventListener("load", init);
-    return () => script?.removeEventListener("load", init);
+    // 상품상세: 구매/찜/톡톡 슬롯(찜·톡톡 미연동은 SDK가 비활성 표시).
+    return mountNpayButton(() => ({
+      buttonKey: BUTTON_KEY,
+      containerId,
+      orderRegistrationVersion: "2.1",
+      type: "template",
+      colorTheme: "green",
+      enable: !!stateRef.current.selectedSku,
+      components: {
+        talkTalk: false, // 네이버 톡톡 미연동
+        wishlist: false, // 찜 정보 연동 별도 구현 전
+        benefitMessage: true,
+        benefitCoachMark: true,
+      },
+      onBuyClick: async () => {
+        const { productId, selectedSku: sku, quantity: qty } = stateRef.current;
+        const res = await fetch("/api/naverpay/order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productId,
+            variantId: sku?.id,
+            quantity: qty,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error("네이버페이 주문 등록 실패");
+        }
+        const data = await res.json();
+        return { key: data.key, merchantNo: data.merchantNo };
+      },
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId, selectedSku?.id]);
+  }, [containerId, selectedSku?.id, quantity]);
 
   if (!BUTTON_KEY) return null;
 

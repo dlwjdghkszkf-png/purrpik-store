@@ -4,17 +4,18 @@ import { withSentryConfig } from "@sentry/nextjs";
 /**
  * Stage 16 — 보안 헤더 + CSP.
  *
- * CSP는 토스 / Supabase / GA / Pixel / 솔라피 / jsdelivr(Pretendard) / 다음 우편번호 허용.
+ * CSP는 토스 / Supabase / GA / Pixel / 솔라피 / jsdelivr(Pretendard) / 다음 우편번호 / 네이버페이 허용.
+ * 네이버페이 주문형 SDK: sandbox=test-pay.naver.com, prod=npay-order.pstatic.net → *.naver.com + *.pstatic.net.
  * 'unsafe-inline' 'unsafe-eval'은 Next.js + shadcn + GA 호환성 위해 임시 허용 (P2 점검).
  */
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.tosspayments.com https://www.googletagmanager.com https://connect.facebook.net https://t1.kakaocdn.net https://t1.daumcdn.net https://*.daum.net https://*.kakao.com",
-  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://t1.daumcdn.net https://*.daumcdn.net",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.tosspayments.com https://www.googletagmanager.com https://connect.facebook.net https://t1.kakaocdn.net https://t1.daumcdn.net https://*.daum.net https://*.kakao.com https://*.naver.com https://*.pstatic.net",
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://t1.daumcdn.net https://*.daumcdn.net https://*.pstatic.net",
   "font-src 'self' https://cdn.jsdelivr.net data:",
   "img-src 'self' data: blob: https: https://*.tosspayments.com https://www.google-analytics.com https://www.facebook.com https://*.daum.net https://*.kakaocdn.net https://*.daumcdn.net https://*.kakao.com",
-  "connect-src 'self' https://*.supabase.co https://api.tosspayments.com https://www.google-analytics.com https://*.facebook.com https://*.sentry.io https://api.solapi.com https://*.daum.net https://*.kakao.com",
-  "frame-src https://js.tosspayments.com https://*.tosspayments.com https://postcode.map.daum.net https://*.daumcdn.net https://*.daum.net https://*.kakao.com",
+  "connect-src 'self' https://*.supabase.co https://api.tosspayments.com https://www.google-analytics.com https://*.facebook.com https://*.sentry.io https://api.solapi.com https://*.daum.net https://*.kakao.com https://*.naver.com https://*.pstatic.net",
+  "frame-src https://js.tosspayments.com https://*.tosspayments.com https://postcode.map.daum.net https://*.daumcdn.net https://*.daum.net https://*.kakao.com https://*.naver.com https://*.pstatic.net",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
