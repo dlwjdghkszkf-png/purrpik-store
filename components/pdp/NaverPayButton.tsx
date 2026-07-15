@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import type { Database, ProductVariants } from "@/lib/supabase/types";
-import { NAVERPAY_BUTTON_KEY, mountNpayButton } from "@/lib/naverpay-client";
+import {
+  NAVERPAY_BUTTON_KEY,
+  mountNpayButton,
+  useNaverPayVisible,
+} from "@/lib/naverpay-client";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 type Sku = ProductVariants["skus"][number];
@@ -24,12 +28,14 @@ export function NaverPayButton({
   quantity: number;
 }) {
   const containerId = `npay-button-${product.id}`;
+  // 검수 요건: 승인 전 운영환경 미노출(preview 토큰 방문자만).
+  const visible = useNaverPayVisible();
   // onBuyClick 클로저가 최신 selectedSku/quantity를 참조하도록 ref로 유지.
   const stateRef = useRef({ productId: product.id, selectedSku, quantity });
   stateRef.current = { productId: product.id, selectedSku, quantity };
 
   useEffect(() => {
-    if (!BUTTON_KEY) return;
+    if (!BUTTON_KEY || !visible) return;
     // 상품상세: 구매/찜/톡톡 슬롯(찜·톡톡 미연동은 SDK가 비활성 표시).
     return mountNpayButton(() => ({
       buttonKey: BUTTON_KEY,
@@ -63,9 +69,9 @@ export function NaverPayButton({
       },
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId, selectedSku?.id, quantity]);
+  }, [visible, containerId, selectedSku?.id, quantity]);
 
-  if (!BUTTON_KEY) return null;
+  if (!BUTTON_KEY || !visible) return null;
 
   return <div id={containerId} className="mt-3 min-h-[52px]" />;
 }

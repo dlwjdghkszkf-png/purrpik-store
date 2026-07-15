@@ -12,11 +12,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { parseVariants, editionLabel } from "@/lib/products/format";
+import { parseVariants } from "@/lib/products/format";
 import {
   registerNaverPayCartOrder,
   type NaverPayOrderInput,
 } from "@/lib/naverpay";
+import { catalogEntry } from "@/lib/naverpay-catalog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,23 +107,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const price = sku?.price ?? product.price;
-    const skuLabel = sku
-      ? sku.edition
-        ? `${editionLabel(sku.edition)} ${sku.size}`
-        : sku.size
-      : null;
-    const name = skuLabel ? `${product.name} (${skuLabel})` : product.name;
-
+    // 상품정보 XML 피드와 동일 파생(parity) — 결제 검증 통과 위해 id/가격 일치 필수.
+    const entry = catalogEntry(product, sku ?? null, BASE_URL);
     inputs.push({
-      productId: sku?.id ?? product.id,
-      name,
-      basePrice: price,
+      productId: entry.id,
+      name: entry.name,
+      basePrice: entry.basePrice,
       quantity: it.quantity,
-      infoUrl: `${BASE_URL}/shop/${product.id}`,
-      imageUrl: product.hero_image
-        ? `${BASE_URL}${product.hero_image}`
-        : `${BASE_URL}/images/products/placeholder.jpg`,
+      infoUrl: entry.infoUrl,
+      imageUrl: entry.imageUrl,
       backUrl: `${BASE_URL}/cart`,
     });
   }

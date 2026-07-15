@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 /**
  * 네이버페이 구매버튼 SDK 클라이언트 공용 (상품상세 + 장바구니 버튼 공유).
  * SDK URL/토글/전역 타입을 한 곳에서 관리 — 드리프트 방지.
@@ -11,6 +13,51 @@ export const NAVERPAY_BUTTON_KEY =
   process.env.NEXT_PUBLIC_NAVERPAY_BUTTON_KEY ?? "";
 
 const SANDBOX = process.env.NEXT_PUBLIC_NAVERPAY_SANDBOX !== "false";
+
+/**
+ * 검수 모드 = SANDBOX 여부. 네이버 최종 승인 전까지 true.
+ * 검수 요건: "서비스 오픈 전까지 운영환경에서 버튼 미노출" → review mode일 땐
+ * preview 토큰을 가진 방문(검수관)에게만 노출. 승인 후 SANDBOX=false → 전체 노출.
+ */
+export const NAVERPAY_REVIEW_MODE = SANDBOX;
+const PREVIEW_TOKEN = process.env.NEXT_PUBLIC_NAVERPAY_PREVIEW_TOKEN ?? "";
+const PREVIEW_STORAGE_KEY = "npay_preview";
+
+/**
+ * 네이버페이 버튼 노출 여부.
+ * - 승인 후(review mode off): 전체 사용자 노출.
+ * - 검수 중(review mode on): `?npay=<PREVIEW_TOKEN>`로 최초 진입 시 localStorage
+ *   플래그를 남기고, 그 브라우저에서만 노출. 일반 사용자는 토큰이 없어 미노출.
+ *   토큰 미설정 시엔 아무에게도 노출 안 됨(운영 노출 차단 안전 기본값).
+ */
+export function useNaverPayVisible(): boolean {
+  // 초기값: 승인 후엔 true, 검수 중엔 false → SSR/CSR 동일(하이드레이션 안전).
+  const [visible, setVisible] = useState(!NAVERPAY_REVIEW_MODE);
+
+  useEffect(() => {
+    if (!NAVERPAY_REVIEW_MODE) {
+      setVisible(true);
+      return;
+    }
+    try {
+      const token = new URLSearchParams(window.location.search).get("npay");
+      if (PREVIEW_TOKEN && token === PREVIEW_TOKEN) {
+        window.localStorage.setItem(PREVIEW_STORAGE_KEY, "1");
+        setVisible(true);
+        return;
+      }
+      if (window.localStorage.getItem(PREVIEW_STORAGE_KEY) === "1") {
+        setVisible(true);
+        return;
+      }
+    } catch {
+      // localStorage 차단 환경 → 미노출(안전측)
+    }
+    setVisible(false);
+  }, []);
+
+  return visible;
+}
 const SDK_ID = "naverpay-button-sdk";
 const SDK_SRC = SANDBOX
   ? "https://test-pay.naver.com/assets/button/latest/npay.button.js"

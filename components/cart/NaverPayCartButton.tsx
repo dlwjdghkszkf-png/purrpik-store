@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { useCartStore } from "@/lib/cart/store";
-import { NAVERPAY_BUTTON_KEY, mountNpayButton } from "@/lib/naverpay-client";
+import {
+  NAVERPAY_BUTTON_KEY,
+  mountNpayButton,
+  useNaverPayVisible,
+} from "@/lib/naverpay-client";
 
 const BUTTON_KEY = NAVERPAY_BUTTON_KEY;
 const CONTAINER_ID = "npay-cart-button";
@@ -15,13 +19,15 @@ const CONTAINER_ID = "npay-cart-button";
 export function NaverPayCartButton() {
   const items = useCartStore((s) => s.items);
   const hasItems = items.length > 0;
+  // 검수 요건: 승인 전 운영환경 미노출(preview 토큰 방문자만).
+  const visible = useNaverPayVisible();
 
   // onBuyClick 클로저가 최신 장바구니를 참조하도록 ref 유지.
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
   useEffect(() => {
-    if (!BUTTON_KEY) return;
+    if (!BUTTON_KEY || !visible) return;
     // 장바구니 = 구매하기 버튼만 (찜/톡톡/혜택 미노출).
     return mountNpayButton(() => ({
       buttonKey: BUTTON_KEY,
@@ -55,11 +61,11 @@ export function NaverPayCartButton() {
         return { key: data.key, merchantNo: data.merchantNo };
       },
     }));
-    // hasItems 변할 때 재렌더(enable 토글). onBuyClick은 ref로 최신 참조.
+    // hasItems/visible 변할 때 재렌더(enable 토글). onBuyClick은 ref로 최신 참조.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasItems]);
+  }, [hasItems, visible]);
 
-  if (!BUTTON_KEY || !hasItems) return null;
+  if (!BUTTON_KEY || !visible || !hasItems) return null;
 
   return <div id={CONTAINER_ID} className="min-h-[52px]" />;
 }
