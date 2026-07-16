@@ -7,6 +7,7 @@ import { MiniCartDrawer } from "@/components/layout/MiniCartDrawer";
 import { CookieBanner } from "@/components/layout/CookieBanner";
 import { KakaoChannelButton } from "@/components/layout/KakaoChannelButton";
 import { AnalyticsLoader } from "@/components/analytics/AnalyticsLoader";
+import { NaverWcs } from "@/components/analytics/NaverWcs";
 
 export const metadata: Metadata = {
   title: "푸르픽 — 길고양이 보호 셸터",
@@ -115,6 +116,7 @@ export default function RootLayout({
         <CookieBanner />
         <KakaoChannelButton />
         <AnalyticsLoader />
+        <NaverWcs />
       </body>
     </html>
   );

@@ -8,7 +8,14 @@
  *
  * 스키마(가이드 §3.2): <products> 루트, 각 <product>에 id/name/basePrice/taxType/
  * infoUrl/imageUrl/status/shippingPolicy. 전상품 무료배송 → shippingPolicy FREE 고정.
+ *
+ * 요청 필터(검수관 지적): 네이버는 상품 정보 요청 시 아래처럼 대상 상품ID를 쿼리로 전달.
+ *   ?product[0][id]=coolmat-s&product[0][optionManageCodes]=...&optionSearch=true
+ * 이 경우 요청된 product[N][id]에 해당하는 상품만 반환(전체 노출 금지). 파라미터
+ * 없으면(초기 크롤 등) 전체 반환. 우리 SKU 모델은 각 조합이 독립 id라 옵션코드/사은품
+ * 파라미터는 무시하고 id 필터만 적용.
  */
+import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   productToCatalogEntries,
@@ -39,7 +46,15 @@ function renderProduct(e: NaverCatalogEntry): string {
   </product>`;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // 네이버 요청 파라미터에서 대상 상품ID 수집: product[0][id], product[1][id], ...
+  const requestedIds = new Set<string>();
+  for (const [key, value] of req.nextUrl.searchParams.entries()) {
+    if (/^product\[\d+\]\[id\]$/.test(key) && value) {
+      requestedIds.add(value);
+    }
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
@@ -48,7 +63,12 @@ export async function GET() {
     .order("created_at", { ascending: true });
 
   const products = error ? [] : (data ?? []);
-  const entries = products.flatMap((p) => productToCatalogEntries(p, BASE_URL));
+  let entries = products.flatMap((p) => productToCatalogEntries(p, BASE_URL));
+
+  // 요청된 상품ID가 있으면 해당 상품만 반환(요청 상품에 대해서만 호출).
+  if (requestedIds.size > 0) {
+    entries = entries.filter((e) => requestedIds.has(e.id));
+  }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <products>
