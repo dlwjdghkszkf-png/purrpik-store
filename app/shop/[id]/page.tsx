@@ -61,26 +61,29 @@ async function fetchMasterProduct(id: string): Promise<ProductRow | null> {
   }
 }
 
-async function fetchReviews(productId: string): Promise<ReviewRow[]> {
+async function fetchReviews(
+  productId: string,
+): Promise<{ reviews: ReviewRow[]; total: number }> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    // 표시용 상위 14개 + 정확한 전체 개수(count: exact).
+    const { data, error, count } = await supabase
       .from("reviews")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("product_id", productId)
       .order("display_order", { ascending: false })
-      .limit(6);
+      .limit(14);
     if (error) {
       console.warn(`[/shop/${productId}] reviews fetch error:`, error.message);
-      return [];
+      return { reviews: [], total: 0 };
     }
-    return data ?? [];
+    return { reviews: data ?? [], total: count ?? (data?.length ?? 0) };
   } catch (e) {
     console.warn(
       `[/shop/${productId}] reviews supabase unavailable:`,
       (e as Error).message,
     );
-    return [];
+    return { reviews: [], total: 0 };
   }
 }
 
@@ -156,11 +159,12 @@ export default async function ProductPage({
     notFound();
   }
 
-  const [product, reviews, faqs] = await Promise.all([
+  const [product, reviewsData, faqs] = await Promise.all([
     fetchMasterProduct(id),
     fetchReviews(id),
     fetchProductFaqs(),
   ]);
+  const { reviews, total: reviewTotal } = reviewsData;
 
   if (!product) {
     notFound();
@@ -201,7 +205,7 @@ export default async function ProductPage({
     productLd.aggregateRating = {
       "@type": "AggregateRating",
       ratingValue: avg.toFixed(1),
-      reviewCount: reviews.length,
+      reviewCount: reviewTotal,
     };
   }
 
@@ -235,7 +239,11 @@ export default async function ProductPage({
           <span className="text-ink">{product.name}</span>
         </nav>
 
-        <ReviewsHero productId={product.id} reviews={reviews} />
+        <ReviewsHero
+          productId={product.id}
+          reviews={reviews}
+          totalCount={reviewTotal}
+        />
 
         <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
           <Gallery product={product} />
@@ -254,7 +262,11 @@ export default async function ProductPage({
       <SpecTable product={product} variants={variants} />
       {/* 상세 이미지가 있는 상품은 일반 마케팅 섹션(Layer4) 생략 — 슬라이스가 대체 */}
       {!getProductDetail(product.id) && <Layer4Section />}
-      <ReviewsSection productId={product.id} reviews={reviews} />
+      <ReviewsSection
+        productId={product.id}
+        reviews={reviews}
+        totalCount={reviewTotal}
+      />
       <FaqSection faqs={faqs} />
 
       <StickyBuyBar product={product} initialSku={initialSku} />

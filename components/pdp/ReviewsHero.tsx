@@ -51,9 +51,11 @@ function HeroStars({ rating }: { rating: number }) {
 export function ReviewsHero({
   productId,
   reviews,
+  totalCount,
 }: {
   productId: string;
   reviews: ReviewRow[];
+  totalCount?: number;
 }) {
   if (reviews.length === 0) {
     return (
@@ -88,7 +90,7 @@ export function ReviewsHero({
           </span>
         </div>
         <span className="text-small text-mute-1">
-          리뷰 {reviews.length.toLocaleString("ko-KR")}건
+          리뷰 {(totalCount ?? reviews.length).toLocaleString("ko-KR")}건
         </span>
 
         {photoReviews.length > 0 && (
