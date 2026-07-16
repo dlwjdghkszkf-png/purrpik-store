@@ -67,24 +67,29 @@ export function parseNaverPayInflow(raw: unknown): NaverPayInflow {
   return out;
 }
 
-/** 유입 요소 XML(값 있는 것만). order 레벨(merchantId/backUrl과 형제). */
+/**
+ * 유입 요소 XML(값 있는 것만).
+ * 검수관 지정 위치: <order> 하위 <interface> 래퍼 안에 넣어야 추적됨
+ * (interface/naverInflowCode, interface/saClickId). order 직속은 무시됨.
+ */
 function buildInflowXml(inflow?: NaverPayInflow): string {
   if (!inflow) return "";
-  const parts: string[] = [];
+  const inner: string[] = [];
   if (inflow.naverInflowCode) {
-    parts.push(
-      `  <naverInflowCode>${xmlEscape(inflow.naverInflowCode)}</naverInflowCode>`,
+    inner.push(
+      `    <naverInflowCode>${xmlEscape(inflow.naverInflowCode)}</naverInflowCode>`,
     );
   }
   if (inflow.saClickId) {
-    parts.push(`  <saClickId>${xmlEscape(inflow.saClickId)}</saClickId>`);
+    inner.push(`    <saClickId>${xmlEscape(inflow.saClickId)}</saClickId>`);
   }
   if (inflow.cpaInflowCode) {
-    parts.push(
-      `  <cpaInflowCode>${xmlEscape(inflow.cpaInflowCode)}</cpaInflowCode>`,
+    inner.push(
+      `    <cpaInflowCode>${xmlEscape(inflow.cpaInflowCode)}</cpaInflowCode>`,
     );
   }
-  return parts.length ? "\n" + parts.join("\n") : "";
+  if (inner.length === 0) return "";
+  return `\n  <interface>\n${inner.join("\n")}\n  </interface>`;
 }
 
 /**
