@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseVariants } from "@/lib/products/format";
-import { registerNaverPayOrder } from "@/lib/naverpay";
+import { registerNaverPayOrder, parseNaverPayInflow } from "@/lib/naverpay";
 import { catalogEntry } from "@/lib/naverpay-catalog";
 
 export const runtime = "nodejs";
@@ -25,6 +25,7 @@ interface OrderBody {
   productId?: unknown;
   variantId?: unknown;
   quantity?: unknown;
+  inflow?: unknown;
 }
 
 export async function POST(req: NextRequest) {
@@ -74,15 +75,18 @@ export async function POST(req: NextRequest) {
   // 상품정보 XML 피드와 동일 파생(parity) — 결제 검증 통과 위해 id/가격 일치 필수.
   const entry = catalogEntry(product, sku ?? null, BASE_URL);
 
-  const result = await registerNaverPayOrder({
-    productId: entry.id,
-    name: entry.name,
-    basePrice: entry.basePrice,
-    quantity,
-    infoUrl: entry.infoUrl,
-    imageUrl: entry.imageUrl,
-    backUrl: `${BASE_URL}/shop/${product.id}`,
-  });
+  const result = await registerNaverPayOrder(
+    {
+      productId: entry.id,
+      name: entry.name,
+      basePrice: entry.basePrice,
+      quantity,
+      infoUrl: entry.infoUrl,
+      imageUrl: entry.imageUrl,
+      backUrl: `${BASE_URL}/shop/${product.id}`,
+    },
+    parseNaverPayInflow(body.inflow),
+  );
 
   if (!result.ok || !result.key) {
     console.error("[naverpay/order] register failed:", result.error);
@@ -93,9 +97,9 @@ export async function POST(req: NextRequest) {
   }
 
   // orderRegistrationVersion '2.1' 버튼 SDK가 기대하는 반환 형식.
-  // merchantNo는 등록 응답값을 그대로 전달(응답에 없을 때만 센터ID 폴백).
+  // merchantNo는 등록 응답값(SUCCESS:key:merchantNo)을 그대로 전달 — 성공 시 항상 존재.
   return NextResponse.json({
     key: result.key,
-    merchantNo: result.merchantNo ?? process.env.NAVERPAY_CENTER_ID,
+    merchantNo: result.merchantNo,
   });
 }

@@ -6,6 +6,7 @@ import {
   NAVERPAY_BUTTON_KEY,
   mountNpayButton,
   useNaverPayVisible,
+  readNaverInflow,
 } from "@/lib/naverpay-client";
 
 const BUTTON_KEY = NAVERPAY_BUTTON_KEY;
@@ -52,6 +53,7 @@ export function NaverPayCartButton() {
               variantId: i.variantId,
               quantity: i.quantity,
             })),
+            inflow: readNaverInflow(), // 광고 유입 추적(NA_CO/NVADID)
           }),
         });
         if (!res.ok) {

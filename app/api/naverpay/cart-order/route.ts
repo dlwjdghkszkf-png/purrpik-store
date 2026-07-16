@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseVariants } from "@/lib/products/format";
 import {
   registerNaverPayCartOrder,
+  parseNaverPayInflow,
   type NaverPayOrderInput,
 } from "@/lib/naverpay";
 import { catalogEntry } from "@/lib/naverpay-catalog";
@@ -31,6 +32,7 @@ interface CartItemBody {
 }
 interface CartOrderBody {
   items?: unknown;
+  inflow?: unknown;
 }
 
 export async function POST(req: NextRequest) {
@@ -45,15 +47,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "장바구니가 비어있습니다" }, { status: 400 });
   }
 
+  // 남용 방지: 비정상적으로 큰 items 배열 거부(정상 장바구니는 수십 개 이하).
+  if (body.items.length > 100) {
+    return NextResponse.json({ error: "장바구니 상품 수 초과" }, { status: 400 });
+  }
+
   // 정규화 + (productId+variantId)로 수량 합산 — 중복 라인이 중복 <product>로 나가지 않도록.
+  const MAX_ID_LEN = 64; // 상품/옵션 ID 길이 상한(정상 slug/SKU id는 짧음).
   const agg = new Map<
     string,
     { productId: string; variantId: string; quantity: number }
   >();
   for (const it of body.items as CartItemBody[]) {
     const productId = typeof it.productId === "string" ? it.productId : "";
-    if (!productId) continue;
-    const variantId = typeof it.variantId === "string" ? it.variantId : "";
+    if (!productId || productId.length > MAX_ID_LEN) continue;
+    const rawVariantId = typeof it.variantId === "string" ? it.variantId : "";
+    const variantId = rawVariantId.length > MAX_ID_LEN ? "" : rawVariantId;
     const q = clampQty(it.quantity);
     const key = `${productId}::${variantId}`;
     const prev = agg.get(key);
@@ -120,7 +129,11 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const result = await registerNaverPayCartOrder(inputs, `${BASE_URL}/cart`);
+  const result = await registerNaverPayCartOrder(
+    inputs,
+    `${BASE_URL}/cart`,
+    parseNaverPayInflow(body.inflow),
+  );
 
   if (!result.ok || !result.key) {
     console.error("[naverpay/cart-order] register failed:", result.error);
@@ -130,10 +143,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // merchantNo는 등록 응답값을 그대로 전달(없을 때만 센터ID 폴백).
+  // merchantNo는 등록 응답값(SUCCESS:key:merchantNo)을 그대로 전달 — 성공 시 항상 존재.
   return NextResponse.json({
     key: result.key,
-    merchantNo: result.merchantNo ?? process.env.NAVERPAY_CENTER_ID,
+    merchantNo: result.merchantNo,
   });
 }
 

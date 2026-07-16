@@ -6,6 +6,7 @@ import {
   NAVERPAY_BUTTON_KEY,
   mountNpayButton,
   useNaverPayVisible,
+  readNaverInflow,
 } from "@/lib/naverpay-client";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
@@ -59,6 +60,7 @@ export function NaverPayButton({
             productId,
             variantId: sku?.id,
             quantity: qty,
+            inflow: readNaverInflow(), // 광고 유입 추적(NA_CO/NVADID)
           }),
         });
         if (!res.ok) {

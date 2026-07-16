@@ -48,10 +48,14 @@ function renderProduct(e: NaverCatalogEntry): string {
 
 export async function GET(req: NextRequest) {
   // 네이버 요청 파라미터에서 대상 상품ID 수집: product[0][id], product[1][id], ...
+  // selector 존재 여부(hasSelector)를 값 유무와 분리 → 빈 값(?product[0][id]=)이
+  // 오면 "필터 요청됨 + 매칭 0"으로 처리(전체 반환 금지).
+  let hasSelector = false;
   const requestedIds = new Set<string>();
   for (const [key, value] of req.nextUrl.searchParams.entries()) {
-    if (/^product\[\d+\]\[id\]$/.test(key) && value) {
-      requestedIds.add(value);
+    if (/^product\[\d+\]\[id\]$/.test(key)) {
+      hasSelector = true;
+      if (value) requestedIds.add(value);
     }
   }
 
@@ -62,11 +66,26 @@ export async function GET(req: NextRequest) {
     .eq("active", true)
     .order("created_at", { ascending: true });
 
-  const products = error ? [] : (data ?? []);
-  let entries = products.flatMap((p) => productToCatalogEntries(p, BASE_URL));
+  // DB 오류를 빈 피드(200)로 위장하지 않음 — 전상품 품절처럼 보이는 캐시 방지.
+  if (error) {
+    return new Response(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<error>service unavailable</error>\n`,
+      {
+        status: 503,
+        headers: {
+          "content-type": "application/xml; charset=UTF-8",
+          "cache-control": "no-store",
+        },
+      },
+    );
+  }
 
-  // 요청된 상품ID가 있으면 해당 상품만 반환(요청 상품에 대해서만 호출).
-  if (requestedIds.size > 0) {
+  let entries = (data ?? []).flatMap((p) =>
+    productToCatalogEntries(p, BASE_URL),
+  );
+
+  // 요청 selector가 있으면 해당 상품만 반환(빈 selector면 결과 없음).
+  if (hasSelector) {
     entries = entries.filter((e) => requestedIds.has(e.id));
   }
 
@@ -76,10 +95,11 @@ ${entries.map(renderProduct).join("\n")}
 </products>
 `;
 
+  // 등록가와 실시간 parity 보장 위해 캐시 금지(가격 stale = 구매불가 팝업 방지).
   return new Response(xml, {
     headers: {
       "content-type": "application/xml; charset=UTF-8",
-      "cache-control": "public, s-maxage=300, stale-while-revalidate=600",
+      "cache-control": "no-store",
     },
   });
 }

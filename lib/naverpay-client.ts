@@ -63,6 +63,38 @@ const SDK_SRC = SANDBOX
   ? "https://test-pay.naver.com/assets/button/latest/npay.button.js"
   : "https://npay-order.pstatic.net/assets/button/latest/npay.button.js";
 
+/** 광고 유입 쿠키(wcslog.js가 심음) → 주문등록 필드 매핑 값. */
+export interface NaverInflowPayload {
+  naverInflowCode?: string;
+  saClickId?: string;
+  cpaInflowCode?: string;
+}
+
+function readCookie(name: string): string {
+  if (typeof document === "undefined") return "";
+  const escaped = name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1");
+  const m = document.cookie.match(
+    new RegExp("(?:^|; )" + escaped + "=([^;]*)"),
+  );
+  return m ? decodeURIComponent(m[1]) : "";
+}
+
+/**
+ * NaPm 유입 시 wcslog.js가 심는 쿠키를 읽어 주문등록용 필드로 변환.
+ * NA_CO→naverInflowCode, NVADID→saClickId, CPAValidator→cpaInflowCode.
+ * 값 없으면 해당 키 생략(일반 주문).
+ */
+export function readNaverInflow(): NaverInflowPayload {
+  const naverInflowCode = readCookie("NA_CO");
+  const saClickId = readCookie("NVADID");
+  const cpaInflowCode = readCookie("CPAValidator");
+  const out: NaverInflowPayload = {};
+  if (naverInflowCode) out.naverInflowCode = naverInflowCode;
+  if (saClickId) out.saClickId = saClickId;
+  if (cpaInflowCode) out.cpaInflowCode = cpaInflowCode;
+  return out;
+}
+
 export interface NpayButtonInstance {
   dispose?: () => void;
 }
