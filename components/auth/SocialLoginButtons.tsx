@@ -18,13 +18,12 @@ export function SocialLoginButtons({ next }: { next?: string }) {
     const redirectTo = `${window.location.origin}/auth/callback${
       next ? `?next=${encodeURIComponent(next)}` : ""
     }`;
-    // 카카오: 이메일(account_email)은 비즈앱 심사가 필요해 요청 시 KOE205 발생.
-    // 비즈앱 없이 바로 로그인되도록 닉네임 동의항목만 요청(이메일은 비즈앱 승인 후 확장).
-    const options: { redirectTo: string; scopes?: string } = { redirectTo };
-    if (provider === "kakao") options.scopes = "profile_nickname";
+    // 카카오는 Supabase가 account_email·profile_image·profile_nickname을 기본 요청(고정,
+    // 클라이언트 scopes는 append만 됨). account_email 동의항목은 비즈앱 승인이 필요 →
+    // 카카오 앱을 비즈앱 전환 + 3개 동의항목 사용 설정해야 KOE205 없이 로그인됨.
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options,
+      options: { redirectTo },
     });
     if (error) {
       setLoading(null);
