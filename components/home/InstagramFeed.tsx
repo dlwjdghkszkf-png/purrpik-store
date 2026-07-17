@@ -1,22 +1,28 @@
+import Image from "next/image";
 import { Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 type IgRow = Database["public"]["Tables"]["instagram_posts"]["Row"];
 
-const PLACEHOLDER_CAPTIONS = [
-  "장마 전 길냥이집 설치 현장",
-  "4중 구조 단면 컷",
-  "팔렛트 깔판 + TPU 바닥 방수",
-  "70kg 하중 시험 비하인드",
-  "입구 사이즈 비교 — M vs L",
-  "쿨매트 표면 온도 측정",
-  "실구매자 후기 #리그램",
-  "60초 설치 챌린지",
-  "아파트 단지 설치 가이드",
-  "담요 4색 랜덤",
-  "장마 D-30 도착 보장",
-  "길냥이집 사진 콘테스트",
+/**
+ * DB 미연결 폴백 — 실제 사용 사진(실구매 리뷰 자산)으로 렌더.
+ * 회색 placeholder 대신 진짜 설치·사용 컷을 노출해 "실제 사용 모습"을 증명.
+ * 실 게시물(instagram_posts)이 채워지면 그쪽이 우선.
+ */
+const FALLBACK_CELLS: { img: string; caption: string }[] = [
+  { img: "/images/reviews/shelter-r03.jpg", caption: "길냥이가 바로 들어간 날" },
+  { img: "/images/reviews/shelter-r06.jpg", caption: "장마철 야외 설치 현장" },
+  { img: "/images/reviews/coolmat-r01.jpg", caption: "쿨매트 위 늘어진 오후" },
+  { img: "/images/reviews/shelter-r08.jpg", caption: "한겨울에도 따뜻한 안쪽" },
+  { img: "/images/reviews/shelter-r09.jpg", caption: "60초 설치 챌린지" },
+  { img: "/images/reviews/coolmat-r03.jpg", caption: "노령묘도 편한 쿨매트" },
+  { img: "/images/reviews/shelter-r02.jpg", caption: "골목 지킴이 블랙 셸터" },
+  { img: "/images/reviews/shelter-r05.jpg", caption: "70kg 하중 시험 통과" },
+  { img: "/images/reviews/coolmat-r06.jpg", caption: "두 냥이 나란히 쿨매트" },
+  { img: "/images/reviews/shelter-r10.jpg", caption: "택배박스 같은 깔끔한 외관" },
+  { img: "/images/reviews/coolmat-r10.jpg", caption: "한여름 필수 쿨링" },
+  { img: "/images/reviews/shelter-r04.jpg", caption: "바닥 습기 차단 팔렛트" },
 ];
 
 async function fetchIgPosts(): Promise<IgRow[]> {
@@ -42,18 +48,20 @@ async function fetchIgPosts(): Promise<IgRow[]> {
 export async function InstagramFeed() {
   const posts = await fetchIgPosts();
 
-  // DB 미연결 폴백: 컴포넌트 안에서 12 placeholder 카드 렌더 (구조 확인용)
+  // DB 미연결 폴백: 실제 사용 사진 12컷 렌더 (회색 placeholder 대체)
   const renderCells =
     posts.length > 0
       ? posts.map((p) => ({
           key: p.id,
           caption: p.caption ?? "푸르픽",
           href: p.permalink,
+          img: p.thumbnail_url ?? null,
         }))
-      : PLACEHOLDER_CAPTIONS.map((c, i) => ({
+      : FALLBACK_CELLS.map((c, i) => ({
           key: `ph-${i}`,
-          caption: c,
+          caption: c.caption,
           href: "https://instagram.com/purrpik",
+          img: c.img,
         }));
 
   return (
@@ -80,7 +88,7 @@ export async function InstagramFeed() {
       </div>
 
       <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6">
-        {renderCells.map(({ key, caption, href }) => (
+        {renderCells.map(({ key, caption, href, img }) => (
           <a
             key={key}
             href={href}
@@ -89,8 +97,17 @@ export async function InstagramFeed() {
             className="group relative block aspect-square overflow-hidden rounded-md bg-zinc-200"
             aria-label={`Instagram 게시물: ${caption}`}
           >
-            {/* TODO: <Image> 실제 thumbnail_url 연결 (Stage 14) */}
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300" />
+            {img ? (
+              <Image
+                src={img}
+                alt={caption}
+                fill
+                sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300" />
+            )}
             <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
               <span className="line-clamp-2 text-[11px] font-medium text-white leading-tight">
                 {caption}

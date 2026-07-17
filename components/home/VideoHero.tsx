@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 /**
  * VideoHero — 풀스크린 비주얼 (영상 도착 전 포스터 + Ken Burns 폴백).
@@ -14,21 +15,17 @@ import Link from "next/link";
 export function VideoHero() {
   return (
     <section className="relative h-[80vh] md:h-[90vh] w-full overflow-hidden bg-ink">
-      {/* 배경 영상 (현재는 source 비어있음 → poster만 노출) */}
-      <video
-        poster="/images/hero-poster.jpg"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover ken-burns"
-      >
-        {/* TODO: 실제 영상 자료 도착 시 <source src="/videos/hero.webm" type="video/webm" /> 추가 */}
-      </video>
+      {/* 배경 이미지 (LCP — priority 로드, Ken Burns). 영상 자료 도착 시 <video>로 교체. */}
+      <Image
+        src="/images/hero-poster.jpg"
+        alt="새벽 골목의 푸르픽 길고양이 보호 셸터 안에서 얼굴을 내민 길고양이"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover ken-burns"
+      />
 
-      {/* poster 폴백: 영상·이미지 모두 없을 때 보이는 톤 */}
+      {/* 이미지 로드 전 폴백 톤 */}
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-br from-zinc-900 via-zinc-800 to-amber-900/40"

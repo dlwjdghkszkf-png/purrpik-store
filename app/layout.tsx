@@ -10,9 +10,35 @@ import { AnalyticsLoader } from "@/components/analytics/AnalyticsLoader";
 import { NaverWcs } from "@/components/analytics/NaverWcs";
 
 export const metadata: Metadata = {
-  title: "푸르픽 — 길고양이 보호 셸터",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr",
+  ),
+  title: {
+    default: "푸르픽 — 길고양이 보호 셸터",
+    template: "%s — 푸르픽",
+  },
   description:
     "4중 구조 길고양이 야외 셸터. 옥스포드 600D · TPU · EPE Foam · AL Foil.",
+  // 전역 소셜 공유 카드 (개별 페이지가 openGraph.images 지정 시 override).
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "푸르픽 PURRPIK",
+    images: [
+      {
+        url: "/images/og-cover.jpg",
+        width: 1200,
+        height: 630,
+        alt: "푸르픽 길고양이 보호 셸터 — 4중 구조 야외 셸터",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "푸르픽 — 길고양이 보호 셸터",
+    description: "4중 구조 길고양이 야외 셸터. 60초 설치, 70kg 하중, 무료배송.",
+    images: ["/images/og-cover.jpg"],
+  },
   // 검색엔진 소유확인 (공개 토큰 — 비밀 아님).
   verification: {
     google: "stJUWIR-IRK2dcJ2sid5sV3kr3sDTiNZv9tWX-YLgFI",

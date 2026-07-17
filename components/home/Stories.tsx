@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 
 /**
  * Stories — Stage 19: 큐레이션 카드 섹션 (29CM 셀렉트샵 톤).
  *
  * 시즌 가이드 + 자재 스토리 + 캠페인 3 카드.
- * 이미지 placeholder (P2 — Supabase storage / public/ 자산 정식 업로드).
+ * 이미지: /images/stories/*.jpg (luna 실사 자산). 로드 실패 시 gradient 폴백.
  * 이모지 금지 (전역 룰).
  */
 type Story = {
@@ -12,7 +13,9 @@ type Story = {
   title: string;
   desc: string;
   href: string;
-  /** placeholder bg — gradient (assets 미배치 단계). P2에서 실제 이미지로 교체. */
+  /** 카드 커버 이미지 (luna 생성 실사). */
+  img: string;
+  /** 이미지 로드 전/실패 시 폴백 gradient. */
   bg: string;
 };
 
@@ -22,6 +25,7 @@ const STORIES: Story[] = [
     title: "장마철 길냥이 보호 5가지 팁",
     desc: "비·습기·곰팡이 막는 셸터 운용 노하우.",
     href: "/care-guide#summer",
+    img: "/images/stories/story-rain.jpg",
     bg: "from-zinc-200 to-zinc-300",
   },
   {
@@ -29,6 +33,7 @@ const STORIES: Story[] = [
     title: "Oxford 600D부터 TPU까지, 4중 구조의 비밀",
     desc: "각 레이어가 어떤 역할을 하는지 살펴보세요.",
     href: "/about#layers",
+    img: "/images/stories/story-material.jpg",
     bg: "from-brand-mustard/30 to-brand-mustard/10",
   },
   {
@@ -36,6 +41,7 @@ const STORIES: Story[] = [
     title: "매 판매 1건 = 1,000원 기금 적립",
     desc: "캣맘·동물보호단체 지원에 함께해주세요.",
     href: "/give-back",
+    img: "/images/stories/story-giveback.jpg",
     bg: "from-ink/20 to-ink/5",
   },
 ];
@@ -62,8 +68,15 @@ export function Stories() {
           >
             <div
               className={`relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br ${s.bg}`}
-              aria-hidden="true"
-            />
+            >
+              <Image
+                src={s.img}
+                alt={s.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
             <div className="flex flex-1 flex-col p-5">
               <p className="text-[11px] font-medium uppercase tracking-wider text-brand-mustard">
                 {s.badge}

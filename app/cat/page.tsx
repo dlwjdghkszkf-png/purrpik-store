@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { VideoHero } from "@/components/home/VideoHero";
+import { TrustBar } from "@/components/home/TrustBar";
 import { EditionGrid } from "@/components/home/EditionGrid";
 import { Layer4 } from "@/components/home/Layer4";
 import { TestStats } from "@/components/home/TestStats";
@@ -26,6 +27,15 @@ export const metadata: Metadata = {
       "옥스포드 600D · TPU · EPE Foam · AL Foil 4중 레이어로 비·바람·열기를 막는 길고양이 보호 셸터. 60초 설치, 70kg 하중. 무료배송.",
     type: "website",
     locale: "ko_KR",
+    siteName: "푸르픽 PURRPIK",
+    images: [
+      {
+        url: "/images/hero-poster.jpg",
+        width: 1792,
+        height: 1024,
+        alt: "새벽 골목의 푸르픽 길고양이 보호 셸터와 길고양이",
+      },
+    ],
   },
 };
 
@@ -36,6 +46,7 @@ export default function CatHome() {
   return (
     <>
       <VideoHero />
+      <TrustBar />
       <EditionGrid />
       <Layer4 />
       <TestStats />
