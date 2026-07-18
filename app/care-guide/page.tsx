@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/care-guide" },
   title: "길고양이 돌봄 가이드 — 푸르픽",
   description:
     "초보 캣맘·캣대디를 위한 5분 가이드. 밥과 물, 잠자리, 계절별 관리, TNR, 이웃과의 공존, 동물보호법까지 — 길고양이 돌봄에 꼭 필요한 7가지 핵심.",

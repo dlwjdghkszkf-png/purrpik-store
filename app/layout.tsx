@@ -11,7 +11,7 @@ import { NaverWcs } from "@/components/analytics/NaverWcs";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr",
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr",
   ),
   title: {
     default: "푸르픽 — 길고양이 보호 셸터",
@@ -60,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const BASE_URL =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
   // 전역 Organization + WebSite JSON-LD (구글 지식 그래프 신호).
   const orgJsonLd = {

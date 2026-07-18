@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/shop" },
   title: "전체 상품 — 푸르픽",
   description:
     "푸르픽 4중 구조 셸터 — 고양이·강아지·둘 다. 반려동물·사이즈·구성으로 선택하세요.",

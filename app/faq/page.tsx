@@ -7,6 +7,7 @@ import { FaqClient } from "./FaqClient";
 type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/faq" },
   title: "FAQ — 푸르픽",
   description: "푸르픽 자주 묻는 질문 — 제품·배송·환불·돌봄.",
 };

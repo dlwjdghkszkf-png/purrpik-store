@@ -77,7 +77,7 @@ export type Article = ArticleFrontmatter & {
 const CONTENT_ROOT = path.join(process.cwd(), "content", "articles");
 const AUTHORS_ROOT = path.join(process.cwd(), "content", "authors");
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 function readMdxFile(filePath: string): {
   data: ArticleFrontmatter;

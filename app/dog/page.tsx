@@ -9,6 +9,7 @@ import { ComingSoonHero } from "@/components/dog/ComingSoonHero";
  */
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/dog" },
   title: "강아지 — 푸르픽 (준비 중)",
   description:
     "푸르픽이 곧 강아지 라인업을 선보입니다. 출시 알림을 받아보세요.",

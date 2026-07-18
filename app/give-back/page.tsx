@@ -4,6 +4,7 @@ import { Heart, Stethoscope, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/give-back" },
   title: "Give Back — 푸르픽",
   description: "푸르픽은 길냥이를 위한 브랜드입니다. 매 판매의 일부를 길냥이 보호 기금으로 적립합니다.",
 };

@@ -130,6 +130,8 @@ export async function generateMetadata({
   return {
     title: `${product.name} — 푸르픽`,
     description: plain,
+    // 레거시 id 크롤에도 마스터 URL이 정본임을 명시 (리다이렉트와 이중 신호).
+    alternates: { canonical: `/shop/${effectiveId}` },
     openGraph: {
       title: product.name,
       description: plain,

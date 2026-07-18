@@ -26,7 +26,7 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic"; // 재고/가격 실시간 반영
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 function renderProduct(e: NaverCatalogEntry): string {
   return `  <product>

@@ -12,10 +12,9 @@ import {
   getAllAuthors,
 } from "@/lib/articles";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 const MASTER_ID = "purrpik-shelter";
-const SKU_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -42,12 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
   ];
-  const skuRoutes: MetadataRoute.Sitemap = SKU_IDS.map((sku) => ({
-    url: `${BASE_URL}/shop/${MASTER_ID}?sku=${sku}`,
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  // ?sku= 쿼리 변형은 canonical(/shop/MASTER_ID)과 충돌하는 중복 URL이라 사이트맵에서 제외.
 
   const categoryRoutes: MetadataRoute.Sitemap = Object.keys(
     ARTICLE_CATEGORIES,
@@ -75,7 +69,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...staticRoutes,
     ...masterRoute,
-    ...skuRoutes,
     ...categoryRoutes,
     ...articleRoutes,
     ...authorRoutes,

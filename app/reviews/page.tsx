@@ -8,6 +8,7 @@ import type { Database } from "@/lib/supabase/types";
 type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/reviews" },
   title: "리뷰 — 푸르픽",
   description:
     "푸르픽 길고양이 셸터 실사용자 리뷰. 사진 후기·별점·사용 환경별 코멘트.",

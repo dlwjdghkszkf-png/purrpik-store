@@ -17,7 +17,7 @@ import {
 } from "@/lib/articles";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 type Params = { category: string; slug: string };
 
@@ -40,7 +40,7 @@ export async function generateMetadata({
 
   // OG 우선순위: 명시된 og_image > hero_image > 동적 생성(/api/og).
   const BASE_URL =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
   const dynamicOg = `${BASE_URL}/api/og?title=${encodeURIComponent(article.title)}&category=${encodeURIComponent(ARTICLE_CATEGORIES[article.category_slug].label)}&author=${encodeURIComponent(article.author === "purrpik-editor" ? "푸르픽 편집부" : article.author)}`;
   const ogImage = article.og_image ?? article.hero_image ?? dynamicOg;
 

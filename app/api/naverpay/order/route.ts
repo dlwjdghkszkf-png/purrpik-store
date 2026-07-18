@@ -19,7 +19,7 @@ import { catalogEntry } from "@/lib/naverpay-catalog";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 interface OrderBody {
   productId?: unknown;

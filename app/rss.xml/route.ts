@@ -6,7 +6,7 @@
 import { ARTICLE_CATEGORIES, getAllArticles } from "@/lib/articles";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 export const revalidate = 3600;
 export const dynamic = "force-static";

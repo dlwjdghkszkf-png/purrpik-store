@@ -8,7 +8,7 @@ import {
 } from "@/lib/articles";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://purrpik.co.kr";
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 export const metadata: Metadata = {
   title: "길고양이 매거진 — 푸르픽",
