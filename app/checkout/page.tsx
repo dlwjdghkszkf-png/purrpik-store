@@ -30,6 +30,8 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState<AddressFormValue>(EMPTY_ADDRESS);
   // 결제 수단 — 무통장입금 기본 (토스 카드결제는 PG 심사 후 사용).
   const [payMethod, setPayMethod] = useState<"bank" | "card">("bank");
+  // PG 키 발급 전에는 카드결제 탭 자체를 숨김 — 키 주입 시 자동 노출.
+  const cardEnabled = Boolean(process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY);
 
   // 페이지 라이프타임 동안 안정적인 orderId — 새로고침 시 새로 생성.
   const orderId = useMemo(() => generateOrderNo(), []);
@@ -137,7 +139,9 @@ export default function CheckoutPage() {
             {/* 결제 수단 선택 */}
             <div className="rounded-lg border border-line p-4">
               <p className="mb-3 text-small font-semibold">결제 수단</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div
+                className={`grid gap-2 ${cardEnabled ? "grid-cols-2" : "grid-cols-1"}`}
+              >
                 <button
                   type="button"
                   onClick={() => setPayMethod("bank")}
@@ -149,17 +153,19 @@ export default function CheckoutPage() {
                 >
                   무통장입금
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setPayMethod("card")}
-                  className={`rounded-md border py-2.5 text-small font-medium transition ${
-                    payMethod === "card"
-                      ? "border-ink bg-ink text-white"
-                      : "border-line text-mute-1 hover:border-ink"
-                  }`}
-                >
-                  카드결제
-                </button>
+                {cardEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => setPayMethod("card")}
+                    className={`rounded-md border py-2.5 text-small font-medium transition ${
+                      payMethod === "card"
+                        ? "border-ink bg-ink text-white"
+                        : "border-line text-mute-1 hover:border-ink"
+                    }`}
+                  >
+                    카드결제
+                  </button>
+                )}
               </div>
             </div>
 
