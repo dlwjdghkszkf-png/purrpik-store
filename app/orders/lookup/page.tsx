@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LookupClient } from "./LookupClient";
 
 export const metadata: Metadata = {
-  title: "주문 조회 — 푸르픽",
+  title: "주문 조회",
   description: "비회원 주문 조회. 주문번호·이메일·휴대폰 끝 4자리로 조회합니다.",
   robots: { index: false, follow: false },
 };

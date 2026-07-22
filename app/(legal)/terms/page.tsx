@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
-  title: "이용약관 — 푸르픽",
+  title: "이용약관",
   description: "푸르픽(purrpik.co.kr) 이용약관 — 전자상거래 표준약관(공정거래위원회 제10023호) 준용.",
 };
 

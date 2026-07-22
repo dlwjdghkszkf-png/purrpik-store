@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 
 export const metadata: Metadata = {
-  title: "로그인 · 회원가입 — 푸르픽",
+  title: "로그인 · 회원가입",
   description: "카카오·구글 계정으로 간편하게 로그인하세요.",
 };
 export const dynamic = "force-dynamic";

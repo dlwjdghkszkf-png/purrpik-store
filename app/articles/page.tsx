@@ -11,7 +11,7 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.purrpik.co.kr";
 
 export const metadata: Metadata = {
-  title: "길고양이 매거진 — 푸르픽",
+  title: "길고양이 매거진",
   description:
     "수의사 자문 검증을 거친 길고양이 입양·케어·해외 사례·영양·건강 가이드. 매일 1편씩 발행합니다.",
   alternates: {

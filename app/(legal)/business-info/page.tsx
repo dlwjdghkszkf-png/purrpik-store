@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/business-info" },
-  title: "사업자정보 — 푸르픽",
+  title: "사업자정보",
   description: "푸르픽 운영사 사업자정보 (전자상거래법 의무 표시).",
 };
 

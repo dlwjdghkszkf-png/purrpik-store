@@ -19,7 +19,7 @@ import { GiveBack } from "@/components/home/GiveBack";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/cat" },
-  title: "고양이 — 푸르픽 길고양이 보호 셸터 | 4중 구조 야외 셸터",
+  title: "고양이 — 4중 구조 길고양이 보호 셸터",
   description:
     "옥스포드 600D · TPU · EPE Foam · AL Foil 4중 레이어로 비·바람·열기를 막는 길고양이 보호 셸터. 60초 설치, 70kg 하중. 무료배송.",
   openGraph: {

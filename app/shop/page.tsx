@@ -8,7 +8,7 @@ type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/shop" },
-  title: "전체 상품 — 푸르픽",
+  title: "전체 상품",
   description:
     "푸르픽 4중 구조 셸터 — 고양이·강아지·둘 다. 반려동물·사이즈·구성으로 선택하세요.",
 };
@@ -83,6 +83,14 @@ export default async function ShopPage({
 
   const products = await fetchMasterProducts({ pet_type });
   const hasFilter = Boolean(pet_type);
+  const pageTitle =
+    pet_type === "cat"
+      ? "고양이 상품"
+      : pet_type === "dog"
+        ? "강아지 상품"
+        : pet_type === "both"
+          ? "강아지·고양이 공용 상품"
+          : "전체 상품";
 
   return (
     <>
@@ -92,11 +100,11 @@ export default async function ShopPage({
             홈
           </Link>
           <span className="mx-2">›</span>
-          <span>전체 상품</span>
+          <span>{pageTitle}</span>
         </nav>
-        <h1 className="mt-3">전체 상품</h1>
+        <h1 className="mt-3">{pageTitle}</h1>
         <p className="mt-3 text-mute-1">
-          4중 구조 야외 보호 셸터 — 클릭 후 에디션·사이즈를 선택하세요
+          길고양이 셸터부터 쿨매트까지 — 클릭 후 옵션을 선택하세요
         </p>
       </header>
 

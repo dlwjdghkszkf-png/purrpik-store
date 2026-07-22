@@ -101,14 +101,7 @@ export default function RootLayout({
     description: "길고양이를 위한 데일리 케어 브랜드",
     publisher: { "@id": `${BASE_URL}/#organization` },
     inLanguage: "ko-KR",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${BASE_URL}/shop?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    // SearchAction 제거 — /shop?q= 검색 미구현 상태에서 거짓 신호 금지.
   };
 
   return (

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Menu, Cat, Dog, PawPrint, type LucideIcon } from "lucide-react";
 import {
   Sheet,
@@ -74,6 +75,16 @@ const PET_PANELS: PetPanelItem[] = [
 export function MegaMenu() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  // 클라이언트 네비 후 헤더가 언마운트되지 않아 패널이 새 페이지 콘텐츠를
+  // 계속 덮는 버그 방지 — 경로가 바뀌면 무조건 닫는다.
+  useEffect(() => {
+    setHovered(null);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  const closePanel = () => setHovered(null);
 
   return (
     <>
@@ -86,7 +97,11 @@ export function MegaMenu() {
           >
             <Menu className="w-6 h-6" />
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] sm:w-[340px] p-0">
+          <SheetContent
+            side="left"
+            className="w-[300px] sm:w-[340px] p-0"
+            aria-describedby={undefined}
+          >
             <SheetHeader className="p-6 border-b border-line">
               <SheetTitle className="text-left text-xl font-bold">
                 메뉴
@@ -173,6 +188,7 @@ export function MegaMenu() {
           >
             <Link
               href={item.href}
+              onClick={closePanel}
               className="text-sm font-medium text-ink hover:text-brand-mustard transition-colors relative"
             >
               {item.label}
@@ -208,6 +224,7 @@ export function MegaMenu() {
                     <>
                       <Link
                         href={MASTER_HREF}
+                        onClick={closePanel}
                         className="mb-3 block rounded-md border border-line p-3 transition-colors hover:border-ink"
                       >
                         <div className="text-sm font-semibold text-ink">
@@ -222,6 +239,7 @@ export function MegaMenu() {
                           <Link
                             key={ed.id}
                             href={`${MASTER_HREF}?sku=${ed.id}`}
+                            onClick={closePanel}
                             className="group block p-2 -m-2 rounded-md hover:bg-secondary transition-colors"
                           >
                             <div className="text-sm font-semibold text-ink group-hover:text-brand-mustard">
@@ -242,6 +260,7 @@ export function MegaMenu() {
 
                   <Link
                     href={p.ctaHref}
+                    onClick={closePanel}
                     className="mt-4 inline-block text-sm font-medium text-brand-mustard hover:underline underline-offset-4"
                   >
                     {p.ctaLabel} →

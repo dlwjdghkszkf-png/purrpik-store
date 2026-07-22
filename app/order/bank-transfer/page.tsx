@@ -6,7 +6,7 @@ import { BANK_INFO, BANK_CONFIGURED, BANK_DEADLINE_DAYS } from "@/lib/bank";
 import { ClearCartOnMount } from "@/components/checkout/ClearCartOnMount";
 
 export const metadata: Metadata = {
-  title: "무통장입금 안내 — 푸르픽",
+  title: "무통장입금 안내",
   robots: { index: false },
 };
 export const dynamic = "force-dynamic";

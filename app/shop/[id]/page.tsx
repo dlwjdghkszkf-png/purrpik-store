@@ -122,13 +122,13 @@ export async function generateMetadata({
     : id;
   const product = await fetchMasterProduct(effectiveId);
   if (!product) {
-    return { title: "상품을 찾을 수 없습니다 — 푸르픽" };
+    return { title: "상품을 찾을 수 없습니다" };
   }
   const plain =
     product.description_html?.replace(/<[^>]+>/g, "").trim().slice(0, 120) ??
     "푸르픽 길고양이 보호 셸터 — 4중 구조.";
   return {
-    title: `${product.name} — 푸르픽`,
+    title: product.name,
     description: plain,
     // 레거시 id 크롤에도 마스터 URL이 정본임을 명시 (리다이렉트와 이중 신호).
     alternates: { canonical: `/shop/${effectiveId}` },

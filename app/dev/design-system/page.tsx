@@ -21,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const metadata: Metadata = {
-  title: "디자인 시스템 — 푸르픽",
+  title: "디자인 시스템",
   robots: { index: false, follow: false },
 };
 

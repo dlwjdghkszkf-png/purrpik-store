@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "./actions";
 
 export const metadata: Metadata = {
-  title: "내 계정 — 푸르픽",
+  title: "내 계정",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

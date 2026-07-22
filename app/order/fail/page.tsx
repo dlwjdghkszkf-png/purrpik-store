@@ -12,7 +12,7 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "결제 실패 — 푸르픽",
+  title: "결제 실패",
   robots: { index: false, follow: false },
 };
 

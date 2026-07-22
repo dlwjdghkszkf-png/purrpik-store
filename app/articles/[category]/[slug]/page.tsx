@@ -45,7 +45,7 @@ export async function generateMetadata({
   const ogImage = article.og_image ?? article.hero_image ?? dynamicOg;
 
   return {
-    title: `${article.title} | 푸르픽 매거진`,
+    title: article.title,
     description: article.excerpt,
     alternates: { canonical: article.url },
     openGraph: {

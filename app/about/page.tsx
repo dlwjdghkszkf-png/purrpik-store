@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/about" },
-  title: "브랜드 스토리 — 푸르픽",
+  title: "브랜드 스토리",
   description: "골목의 그 아이를 위해 — 푸르픽 브랜드 스토리와 제품 철학.",
 };
 

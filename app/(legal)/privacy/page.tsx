@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
-  title: "개인정보처리방침 — 푸르픽",
+  title: "개인정보처리방침",
   description: "푸르픽 개인정보처리방침.",
   robots: { index: false, follow: false },
 };

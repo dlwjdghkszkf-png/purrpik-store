@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Package, Search, ShoppingBag } from "lucide-react";
+import { Package, ShoppingBag } from "lucide-react";
 import { MegaMenu } from "./MegaMenu";
 import { PetTypeBadge } from "./PetTypeBadge";
 import { AccountLink } from "./AccountLink";
@@ -42,15 +42,6 @@ export function Header() {
           {/* 우측: 아이콘 그룹 */}
           <div className="flex items-center justify-end gap-3 md:gap-4">
             <PetTypeBadge />
-
-            <button
-              type="button"
-              aria-label="검색"
-              onClick={() => console.log("TODO: search")}
-              className="hidden md:inline-flex text-ink hover:text-brand-mustard transition-colors p-1"
-            >
-              <Search className="w-6 h-6" />
-            </button>
 
             <Link
               href="/orders/lookup"

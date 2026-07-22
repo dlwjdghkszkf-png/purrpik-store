@@ -36,6 +36,7 @@ export function MiniCartDrawer() {
       <SheetContent
         side="right"
         className="w-full sm:max-w-[400px] p-0 flex flex-col"
+        aria-describedby={undefined}
       >
         <SheetHeader className="px-5 py-4 border-b border-line">
           <SheetTitle className="text-left text-lg font-bold flex items-center gap-2">

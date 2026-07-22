@@ -30,7 +30,7 @@ export async function generateMetadata({
   const author = getAuthorBySlug(slug);
   if (!author) return {};
   return {
-    title: `${author.name} — ${author.role} | 푸르픽`,
+    title: `${author.name} — ${author.role}`,
     description: author.bio,
     alternates: { canonical: author.url },
     openGraph: {

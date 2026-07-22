@@ -16,7 +16,7 @@ type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/both" },
-  title: "강아지·고양이 — 푸르픽",
+  title: "강아지·고양이",
   description:
     "강아지·고양이 모두를 위한 호환 제품. 두 반려동물 한 집에 사는 가정을 위한 푸르픽 큐레이션.",
 };

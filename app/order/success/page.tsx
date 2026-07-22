@@ -16,7 +16,7 @@ import { confirmOrderAction } from "./actions";
 import { SuccessClient } from "./SuccessClient";
 
 export const metadata: Metadata = {
-  title: "결제 완료 — 푸르픽",
+  title: "결제 완료",
   robots: { index: false, follow: false }, // 결제 결과 페이지는 검색 X
 };
 

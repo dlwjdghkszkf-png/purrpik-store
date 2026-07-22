@@ -14,7 +14,7 @@ import { PetGate } from "@/components/gate/PetGate";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
-  title: "푸르픽 — 반려동물 보호 셸터",
+  title: { absolute: "푸르픽 — 반려동물 보호 셸터" },
   description:
     "고양이·강아지 모두를 위한 푸르픽. 반려동물을 선택하고 카테고리별 큐레이션을 확인하세요.",
   openGraph: {

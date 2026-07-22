@@ -27,7 +27,7 @@ export async function generateMetadata({
   if (!(category in ARTICLE_CATEGORIES)) return {};
   const cat = ARTICLE_CATEGORIES[category as ArticleCategorySlug];
   return {
-    title: `${cat.label} — 길고양이 매거진 | 푸르픽`,
+    title: `${cat.label} — 길고양이 매거진`,
     description: cat.description,
     alternates: { canonical: `${BASE_URL}/articles/${cat.slug}` },
     openGraph: {

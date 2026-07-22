@@ -115,6 +115,7 @@ export function MobileOptionSheet({
         side="bottom"
         showCloseButton={false}
         className="lg:hidden p-0 max-h-[90vh] flex flex-col rounded-t-2xl"
+        aria-describedby={undefined}
       >
         {/* 핸들바 */}
         <div className="flex items-center justify-center pt-2 pb-1">
