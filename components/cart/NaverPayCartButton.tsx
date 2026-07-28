@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/cart/store";
 import {
   NAVERPAY_BUTTON_KEY,
@@ -22,6 +22,7 @@ export function NaverPayCartButton() {
   const hasItems = items.length > 0;
   // 검수 요건: 승인 전 운영환경 미노출(preview 토큰 방문자만).
   const visible = useNaverPayVisible();
+  const [failed, setFailed] = useState(false);
 
   // onBuyClick 클로저가 최신 장바구니를 참조하도록 ref 유지.
   const itemsRef = useRef(items);
@@ -29,6 +30,7 @@ export function NaverPayCartButton() {
 
   useEffect(() => {
     if (!BUTTON_KEY || !visible) return;
+    setFailed(false);
     // 장바구니 = 구매하기 버튼만 (찜/톡톡/혜택 미노출).
     return mountNpayButton(() => ({
       buttonKey: BUTTON_KEY,
@@ -62,12 +64,28 @@ export function NaverPayCartButton() {
         const data = await res.json();
         return { key: data.key, merchantNo: data.merchantNo };
       },
-    }));
+    }), () => setFailed(true));
     // hasItems/visible 변할 때 재렌더(enable 토글). onBuyClick은 ref로 최신 참조.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasItems, visible]);
 
   if (!BUTTON_KEY || !visible || !hasItems) return null;
+
+  // P2-3: SDK 실패 시 빈 공간 대신 안내 (일반 결제 버튼은 별도라 유지됨).
+  if (failed) {
+    return (
+      <div className="rounded-md border border-line bg-secondary/30 px-4 py-3 text-center text-xs text-mute-1">
+        네이버페이를 불러오지 못했어요.{" "}
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="font-medium text-ink underline underline-offset-2"
+        >
+          새로고침
+        </button>
+      </div>
+    );
+  }
 
   return <div id={CONTAINER_ID} className="min-h-[52px]" />;
 }

@@ -127,14 +127,20 @@ declare global {
   }
 }
 
-/** SDK <script> 1회 삽입 (중복 삽입 방지). */
-export function ensureNpaySdk(): void {
+/** SDK <script> 1회 삽입 (중복 삽입 방지). onError는 로드 실패(CSP/네트워크) 시 호출. */
+export function ensureNpaySdk(onError?: () => void): void {
   if (typeof document === "undefined") return;
-  if (document.getElementById(SDK_ID)) return;
+  const existing = document.getElementById(SDK_ID);
+  if (existing) {
+    // 이미 삽입됐지만 로드 실패로 window.Npay가 없을 수 있음 — 폴링이 timeout으로 감지.
+    if (onError) existing.addEventListener("error", onError, { once: true });
+    return;
+  }
   const s = document.createElement("script");
   s.id = SDK_ID;
   s.src = SDK_SRC;
   s.async = true;
+  if (onError) s.addEventListener("error", onError, { once: true });
   document.head.appendChild(s);
 }
 
@@ -151,27 +157,37 @@ const SDK_POLL_MAX_ATTEMPTS = 60;
  */
 export function mountNpayButton(
   buildOptions: () => NpayOrderCreateOptions,
+  onError?: () => void,
 ): () => void {
   let cancelled = false;
   let instance: NpayButtonInstance | null = null;
   let timer: ReturnType<typeof setInterval> | null = null;
+  const fail = (reason: string) => {
+    if (cancelled) return;
+    console.warn("[naverpay] button unavailable:", reason);
+    onError?.();
+  };
 
   function render() {
     if (cancelled || !window.Npay) return;
     const opts = buildOptions();
     const el = document.getElementById(opts.containerId);
     if (el) el.innerHTML = ""; // 재렌더 시 중복 삽입 방지
-    const created = window.Npay.order.create(opts);
-    Promise.resolve(created)
-      .then((inst) => {
-        if (!inst) return;
-        if (cancelled) inst.dispose?.();
-        else instance = inst;
-      })
-      .catch(() => {});
+    try {
+      const created = window.Npay.order.create(opts);
+      Promise.resolve(created)
+        .then((inst) => {
+          if (!inst) return;
+          if (cancelled) inst.dispose?.();
+          else instance = inst;
+        })
+        .catch(() => fail("order.create rejected"));
+    } catch (e) {
+      fail((e as Error).message);
+    }
   }
 
-  ensureNpaySdk();
+  ensureNpaySdk(() => fail("sdk script load error"));
 
   if (window.Npay) {
     render();
@@ -186,7 +202,8 @@ export function mountNpayButton(
         render();
       } else if (attempts >= SDK_POLL_MAX_ATTEMPTS) {
         if (timer) clearInterval(timer);
-        timer = null; // SDK 미로드 — 조용히 포기
+        timer = null;
+        fail("sdk poll timeout"); // 6초 내 미로드 — UI에 재시도 안내
       }
     }, SDK_POLL_INTERVAL_MS);
   }
