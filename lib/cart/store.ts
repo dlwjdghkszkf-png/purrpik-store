@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { createSafeStorage } from "@/lib/safe-storage";
 
 export type CartItem = {
   productId: string;
@@ -82,9 +83,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "purrpik-cart",
-      storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? localStorage : (undefined as never),
-      ),
+      storage: createJSONStorage(() => createSafeStorage() as Storage),
       partialize: (state) => ({ items: state.items }),
     },
   ),

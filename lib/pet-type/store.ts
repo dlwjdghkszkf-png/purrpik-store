@@ -10,6 +10,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { createSafeStorage } from "@/lib/safe-storage";
 
 export type PetType = "cat" | "dog" | "both";
 
@@ -33,12 +34,16 @@ export const usePetTypeStore = create<PetTypeStore>()(
     }),
     {
       name: "purrpik-pet-type",
-      storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? localStorage : (undefined as never)
-      ),
+      storage: createJSONStorage(() => createSafeStorage() as Storage),
       partialize: (s) => ({ petType: s.petType }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated();
+      onRehydrateStorage: () => (state, error) => {
+        // rehydrate 실패(손상 JSON 등)에도 hydrated=true로 만들어
+        // 게이트/배지가 영구 로딩 상태에 갇히지 않게 한다 (P1-4).
+        if (error || !state) {
+          usePetTypeStore.setState({ hydrated: true });
+          return;
+        }
+        state.setHydrated();
       },
     }
   )

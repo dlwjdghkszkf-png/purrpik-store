@@ -8,10 +8,27 @@ const STORAGE_KEY = "cookie_consent";
 
 export type CookieConsent = "accepted" | "declined" | null;
 
+// P1-4: localStorage 접근 예외(프라이빗 모드·서드파티 차단·quota)가
+// 동의/거부 버튼 핸들러를 throw시켜 배너가 안 닫히는 것을 막는다.
+function safeGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function safeSet(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* 무시 — 배너는 메모리 상태로 닫힌다 */
+  }
+}
+
 /** 다른 컴포넌트(GA/Pixel)가 동의 상태를 확인할 때 사용 */
 export function getCookieConsent(): CookieConsent {
   if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(STORAGE_KEY);
+  const v = safeGet(STORAGE_KEY);
   if (v === "accepted" || v === "declined") return v;
   return null;
 }
@@ -41,18 +58,18 @@ export function CookieBanner() {
 
   useEffect(() => {
     setMounted(true);
-    const v = window.localStorage.getItem(STORAGE_KEY);
+    const v = safeGet(STORAGE_KEY);
     if (!v) setVisible(true);
   }, []);
 
   function accept() {
-    window.localStorage.setItem(STORAGE_KEY, "accepted");
+    safeSet(STORAGE_KEY, "accepted");
     window.dispatchEvent(new CustomEvent("cookie-consent-accepted"));
     setVisible(false);
   }
 
   function decline() {
-    window.localStorage.setItem(STORAGE_KEY, "declined");
+    safeSet(STORAGE_KEY, "declined");
     window.dispatchEvent(new CustomEvent("cookie-consent-declined"));
     setVisible(false);
   }

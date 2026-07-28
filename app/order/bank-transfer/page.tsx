@@ -19,17 +19,22 @@ export default async function BankTransferPage({
   const { orderId } = await searchParams;
   if (!orderId) notFound();
 
-  let order: { amount: number; buyer_name: string } | null = null;
-  try {
-    const supabase = createServiceClient();
-    const { data } = await supabase
-      .from("orders")
-      .select("amount, buyer_name")
-      .eq("order_no", orderId)
-      .limit(1);
-    order = data?.[0] ?? null;
-  } catch {
-    order = null;
+  // P1-6: 실제 존재하는 무통장 주문일 때만 성공 화면 + 카트 비우기.
+  // 임의 orderId로 직접 진입해 카트가 지워지거나 가짜 성공을 보는 것 차단.
+  // 조회 실패(순단)는 throw → 404가 아니라 error 경계.
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("amount, buyer_name, payment_method")
+    .eq("order_no", orderId)
+    .limit(1);
+  if (error) {
+    throw new Error(`[bank-transfer] order lookup failed: ${error.message}`);
+  }
+  const order = data?.[0] ?? null;
+  // 미존재하거나 무통장 주문이 아니면 성공 화면을 띄우지 않는다.
+  if (!order || order.payment_method !== "bank_transfer") {
+    notFound();
   }
 
   return (

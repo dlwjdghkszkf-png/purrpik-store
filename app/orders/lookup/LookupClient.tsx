@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,9 @@ function formatKRW(n: number): string {
 export function LookupClient() {
   const [result, setResult] = useState<LookupResult | null>(null);
   const [pending, startTransition] = useTransition();
+  // P1-5: 완료 페이지의 '주문 상세 보기' 링크(?orderNo=)를 폼에 미리 채움.
+  const searchParams = useSearchParams();
+  const prefillOrderNo = searchParams.get("orderNo") ?? "";
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,19 +51,9 @@ export function LookupClient() {
             id="orderNo"
             name="orderNo"
             placeholder="PP-XXXXXXXXXX"
+            defaultValue={prefillOrderNo}
             required
             autoComplete="off"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="결제 시 입력한 이메일"
-            required
-            autoComplete="email"
           />
         </div>
         <div className="flex flex-col gap-2">

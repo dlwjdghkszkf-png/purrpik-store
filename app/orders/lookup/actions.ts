@@ -28,23 +28,20 @@ function normalizePhone(p: string): string {
 
 /**
  * 비회원 주문 조회.
- * 매칭 기준: order_no + buyer_email + buyer_phone 끝 4자리.
+ * 매칭 기준: order_no + buyer_phone 끝 4자리.
  *
- * 보안 노트: phoneTail 4자리만 검증 — 풀 번호 노출 X, 무작위 대입 가능성은
- * order_no가 PP-prefix + 충분한 엔트로피라 실질적 위험 낮음. 추후 rate-limit
- * 추가 권고 (Stage 12+).
+ * P1-5: 이메일은 체크아웃에서 선택 항목이라 null일 수 있다 → 조회 조건에서 제외.
+ * order_no(PP-prefix + 충분한 엔트로피) + 휴대폰 끝 4자리 조합이면 충분히 안전.
+ * 추후 rate-limit 추가 권고 (Stage 12+).
  */
 export async function lookupOrder(formData: FormData): Promise<LookupResult> {
   const orderNo = String(formData.get("orderNo") ?? "").trim();
-  const email = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase();
   const phoneTail = normalizePhone(
     String(formData.get("phoneTail") ?? "").trim(),
   );
 
-  if (!orderNo || !email || !phoneTail) {
-    return { ok: false, error: "모든 항목을 입력해주세요." };
+  if (!orderNo || !phoneTail) {
+    return { ok: false, error: "주문번호와 휴대폰 끝 4자리를 입력해주세요." };
   }
   if (phoneTail.length !== 4) {
     return { ok: false, error: "휴대폰 끝 4자리를 정확히 입력해주세요." };
@@ -66,7 +63,6 @@ export async function lookupOrder(formData: FormData): Promise<LookupResult> {
       .from("orders")
       .select("*")
       .eq("order_no", orderNo)
-      .eq("buyer_email", email)
       .like("buyer_phone", `%${phoneTail}`)
       .limit(1)
       .maybeSingle();
