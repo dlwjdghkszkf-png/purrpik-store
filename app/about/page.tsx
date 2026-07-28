@@ -104,7 +104,7 @@ export default function AboutPage() {
 
         <div className="mt-10">
           <Button asChild variant="outline">
-            <Link href="/care-guide#잠자리">4중 구조 상세 보기</Link>
+            <Link href="/care-guide#shelter">4중 구조 상세 보기</Link>
           </Button>
         </div>
       </section>

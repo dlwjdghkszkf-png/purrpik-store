@@ -29,7 +29,8 @@ export function KakaoChannelButton() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 transition-opacity duration-500 ${
+      // 모바일: PDP 고정 구매바(z-40, ~76px)를 피해 위로 — CTA 클릭 가로채기 방지 (sol P1-3).
+      className={`fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-50 transition-opacity duration-500 ${
         visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
