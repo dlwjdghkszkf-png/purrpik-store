@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import type { Database, PetType } from "@/lib/supabase/types";
+import type { PetType } from "@/lib/supabase/types";
+import { getMasterProducts } from "@/lib/products/catalog";
 import { ProductCard } from "@/components/shop/ProductCard";
-
-type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/shop" },
@@ -22,40 +20,16 @@ interface ShopSearchParams {
 
 /**
  * Stage 18 — 카탈로그는 마스터 product만 표시.
- * 4 SKU 옵션 선택은 PDP `/shop/purrpik-shelter`의 OptionPicker에서.
- * 카테고리(pet_type) 필터만 유지. size/edition 필터는 마스터 1개 화면이라 의미 없어 제거.
+ * P1-1: 캐시된 cookie-less 로더 사용. 조회 실패는 throw되어 error.tsx가 처리하고,
+ *       "등록된 상품 없음"으로 위장되지 않는다. pet_type 필터는 메모리에서 적용.
  */
-async function fetchMasterProducts(
-  filters: ShopSearchParams,
-): Promise<ProductRow[]> {
-  try {
-    const supabase = await createClient();
-    let query = supabase
-      .from("products")
-      .select("*")
-      .eq("active", true)
-      .eq("is_master", true)
-      .order("display_order", { ascending: true });
-
-    // 'both'(공용) 상품은 고양이·강아지 필터 양쪽에 노출. '둘 다' 필터는 both 전용만.
-    if (filters.pet_type === "cat") {
-      query = query.in("pet_type", ["cat", "both"]);
-    } else if (filters.pet_type === "dog") {
-      query = query.in("pet_type", ["dog", "both"]);
-    } else if (filters.pet_type === "both") {
-      query = query.eq("pet_type", "both");
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      console.warn("[/shop] products fetch error:", error.message);
-      return [];
-    }
-    return data ?? [];
-  } catch (e) {
-    console.warn("[/shop] supabase unavailable:", (e as Error).message);
-    return [];
-  }
+async function fetchMasterProducts(filters: ShopSearchParams) {
+  const all = await getMasterProducts();
+  const pt = filters.pet_type;
+  if (pt === "cat") return all.filter((p) => p.pet_type === "cat" || p.pet_type === "both");
+  if (pt === "dog") return all.filter((p) => p.pet_type === "dog" || p.pet_type === "both");
+  if (pt === "both") return all.filter((p) => p.pet_type === "both");
+  return all;
 }
 
 function emptyMessage(petType: PetType | undefined): string {

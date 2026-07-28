@@ -11,6 +11,7 @@ import { SpecTable } from "@/components/pdp/SpecTable";
 import { Layer4Section } from "@/components/pdp/Layer4Section";
 import { ProductDetailImages } from "@/components/pdp/ProductDetailImages";
 import { getProductDetail } from "@/lib/product-detail";
+import { getMasterProductById } from "@/lib/products/catalog";
 import { ReviewsSection } from "@/components/pdp/ReviewsSection";
 import { ReviewsHero } from "@/components/pdp/ReviewsHero";
 import { FaqSection } from "@/components/pdp/FaqSection";
@@ -29,36 +30,12 @@ const VALID_MASTER_IDS = [MASTER_ID, "purrpik-coolmat"] as const;
 // force-dynamic: cookies() 사용한 createClient 때문에 prerender 시 fail → notFound 캐시되는 문제 회피.
 export const dynamic = "force-dynamic";
 
-async function fetchMasterProduct(id: string): Promise<ProductRow | null> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .eq("active", true)
-      .eq("is_master", true)
-      .limit(1);
-    if (error) {
-      console.error(
-        `[/shop/${id}] product fetch error:`,
-        error.message,
-        error.code,
-        error.details,
-      );
-      return null;
-    }
-    if (!data || data.length === 0) {
-      console.error(
-        `[/shop/${id}] master product not found in DB (rows=${data?.length ?? 0})`,
-      );
-      return null;
-    }
-    return data[0];
-  } catch (e) {
-    console.error(`[/shop/${id}] supabase unavailable:`, (e as Error).message);
-    return null;
-  }
+// P1-2: 캐시된 cookie-less 로더 사용.
+// - 성공 + 미존재 → null (호출부 notFound)
+// - 조회 실패 → throw (error.tsx 경계로, 404 위장 금지)
+// generateMetadata에서만 실패를 삼켜 메타 fallback 처리한다.
+function fetchMasterProduct(id: string): Promise<ProductRow | null> {
+  return getMasterProductById(id);
 }
 
 async function fetchReviews(
@@ -120,7 +97,14 @@ export async function generateMetadata({
   const effectiveId = LEGACY_IDS.includes(id as (typeof LEGACY_IDS)[number])
     ? MASTER_ID
     : id;
-  const product = await fetchMasterProduct(effectiveId);
+  // 메타 생성 실패는 페이지를 죽이지 않는다 — 조회 실패는 page 본문에서 throw되어
+  // error.tsx가 처리하고, 여기선 fallback 타이틀만.
+  let product: ProductRow | null = null;
+  try {
+    product = await fetchMasterProduct(effectiveId);
+  } catch {
+    return { title: "푸르픽" };
+  }
   if (!product) {
     return { title: "상품을 찾을 수 없습니다" };
   }
