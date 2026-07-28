@@ -235,6 +235,45 @@ export interface Database {
         };
         Relationships: [];
       };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string;
+          variant_id: string | null;
+          product_name: string;
+          variant_label: string | null;
+          unit_price: number;
+          quantity: number;
+          line_total: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id: string;
+          variant_id?: string | null;
+          product_name: string;
+          variant_label?: string | null;
+          unit_price: number;
+          quantity: number;
+          line_total: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          product_id?: string;
+          variant_id?: string | null;
+          product_name?: string;
+          variant_label?: string | null;
+          unit_price?: number;
+          quantity?: number;
+          line_total?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       reviews: {
         Row: {
           id: string;

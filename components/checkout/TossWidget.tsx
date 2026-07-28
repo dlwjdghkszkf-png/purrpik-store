@@ -8,6 +8,7 @@ import {
 } from "@tosspayments/tosspayments-sdk";
 import { Button } from "@/components/ui/button";
 import { createPendingOrder } from "@/app/checkout/actions";
+import type { CheckoutLineInput } from "@/lib/checkout/pricing";
 
 export interface TossOrderInfo {
   orderId: string;
@@ -15,10 +16,8 @@ export interface TossOrderInfo {
   customerName: string;
   customerEmail?: string;
   customerMobilePhone?: string;
-  productId: string;
-  /** Stage 18 — 첫 카트 라인의 SKU id (있을 때만). */
-  variantId?: string | null;
-  quantity: number;
+  /** P0 — 카트 전체 라인. 가격은 서버(priceCheckout)가 재계산한다. */
+  lines: CheckoutLineInput[];
   ship: {
     zipcode: string;
     address1: string;
@@ -96,13 +95,10 @@ export function TossWidget({ amount, ready, orderInfo }: Props) {
     setError(null);
     setLoading(true);
     try {
-      // 1. Pending order INSERT (server action)
+      // 1. Pending order INSERT (server action) — 금액은 서버가 재계산.
       const created = await createPendingOrder({
         orderId: orderInfo.orderId,
-        productId: orderInfo.productId,
-        variantId: orderInfo.variantId ?? null,
-        quantity: orderInfo.quantity,
-        amount,
+        lines: orderInfo.lines,
         buyer: {
           name: orderInfo.customerName,
           phone: orderInfo.customerMobilePhone ?? "",
@@ -111,13 +107,19 @@ export function TossWidget({ amount, ready, orderInfo }: Props) {
         ship: orderInfo.ship,
       });
 
-      if (!created.ok) {
+      if (!created.ok || !created.amount) {
         setError(created.error ?? "주문 등록에 실패했습니다.");
         setLoading(false);
         return;
       }
 
-      // 2. Toss 결제창 호출 — 성공 시 success URL로 리다이렉트.
+      // 2. 결제 위젯 금액을 서버 계산액으로 동기화 — confirm의 amount 검증과 일치 보장.
+      await widgetsRef.current.setAmount({
+        currency: "KRW",
+        value: created.amount,
+      });
+
+      // 3. Toss 결제창 호출 — 성공 시 success URL로 리다이렉트.
       const origin = window.location.origin;
       await widgetsRef.current.requestPayment({
         orderId: orderInfo.orderId,

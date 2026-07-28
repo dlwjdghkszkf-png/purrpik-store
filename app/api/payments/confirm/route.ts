@@ -202,13 +202,26 @@ export async function POST(req: NextRequest) {
   // 7. 알림톡 발송 — 실패해도 결제는 OK.
   const templateId = process.env.SOLAPI_KAKAO_TEMPLATE_ORDER ?? "";
   if (templateId && order.buyer_phone) {
+    // P0-2 — 복수 라인이면 "첫 상품 외 N건"으로 표기 (조회 실패 시 기존 표기 유지).
+    let alimProductName = order.products?.name ?? order.product_id;
+    try {
+      const { count } = await supabase
+        .from("order_items")
+        .select("id", { count: "exact", head: true })
+        .eq("order_id", order.id);
+      if (count && count > 1) {
+        alimProductName = `${alimProductName} 외 ${count - 1}건`;
+      }
+    } catch {
+      /* 표기 보조 — 실패 무시 */
+    }
     const alim = await sendAlimtalk({
       to: order.buyer_phone,
       templateId,
       variables: {
         고객명: order.buyer_name,
         주문번호: order.order_no,
-        상품명: order.products?.name ?? order.product_id,
+        상품명: alimProductName,
         결제금액: `${order.amount.toLocaleString("ko-KR")}원`,
       },
     });

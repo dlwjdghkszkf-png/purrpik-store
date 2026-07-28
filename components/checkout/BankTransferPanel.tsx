@@ -28,10 +28,7 @@ export function BankTransferPanel({
     setError(null);
     const created = await createPendingOrder({
       orderId: orderInfo.orderId,
-      productId: orderInfo.productId,
-      variantId: orderInfo.variantId ?? null,
-      quantity: orderInfo.quantity,
-      amount,
+      lines: orderInfo.lines,
       paymentMethod: "bank_transfer",
       buyer: {
         name: orderInfo.customerName,

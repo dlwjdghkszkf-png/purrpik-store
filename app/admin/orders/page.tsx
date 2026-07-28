@@ -46,6 +46,12 @@ interface OrderRow {
   ship_memo: string | null;
   alimtalk_sent_at: string | null;
   products?: { name?: string } | null;
+  order_items?: Array<{
+    product_name: string;
+    variant_label: string | null;
+    quantity: number;
+    line_total: number;
+  }> | null;
 }
 
 function fmtDate(iso: string): string {
@@ -58,13 +64,27 @@ export default async function AdminOrdersPage() {
   if (!(await isAdmin())) redirect("/admin/login");
 
   const supabase = createServiceClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, order_no, created_at, buyer_name, buyer_phone, amount, quantity, payment_method, status, product_id, ship_zipcode, ship_address1, ship_address2, ship_memo, alimtalk_sent_at, products(name)",
+      "id, order_no, created_at, buyer_name, buyer_phone, amount, quantity, payment_method, status, product_id, ship_zipcode, ship_address1, ship_address2, ship_memo, alimtalk_sent_at, products(name), order_items(product_name, variant_label, quantity, line_total)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
+
+  // P1-7: 조회 장애를 "주문 없음"으로 위장하지 않는다.
+  if (error) {
+    console.error("[admin/orders] fetch error:", error.message);
+    return (
+      <div className="container-page py-16 text-center">
+        <p className="font-semibold text-red-600">
+          주문 조회에 실패했습니다 — 실제 주문이 없는 것이 아닙니다.
+        </p>
+        <p className="mt-2 text-sm text-mute-1">{error.message}</p>
+        <p className="mt-4 text-sm text-mute-2">새로고침으로 다시 시도해주세요.</p>
+      </div>
+    );
+  }
 
   const orders = (data ?? []) as unknown as OrderRow[];
   // 입금대기 무통장 최상단, 그 외 최신순.
@@ -141,8 +161,22 @@ export default async function AdminOrdersPage() {
                   </div>
                 </td>
                 <td className="py-3 pr-3 text-mute-1">
-                  {o.products?.name ?? o.product_id}
-                  <span className="text-mute-2"> ×{o.quantity}</span>
+                  {o.order_items && o.order_items.length > 0 ? (
+                    <div className="space-y-0.5">
+                      {o.order_items.map((it, i) => (
+                        <div key={i}>
+                          {it.product_name}
+                          {it.variant_label ? ` (${it.variant_label})` : ""}
+                          <span className="text-mute-2"> ×{it.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {o.products?.name ?? o.product_id}
+                      <span className="text-mute-2"> ×{o.quantity}</span>
+                    </>
+                  )}
                 </td>
                 <td className="py-3 pr-3 text-right font-semibold tabular-nums text-ink">
                   {o.amount.toLocaleString("ko-KR")}

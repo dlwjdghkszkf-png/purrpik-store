@@ -96,17 +96,42 @@ export function LookupClient() {
 
           <div className="mt-6 border-t border-line pt-4">
             <p className="text-small font-semibold text-mute-1">상품</p>
-            <div className="mt-2 flex items-center justify-between">
-              <p className="text-base">
-                {order.product?.name ?? order.product_id}
-                <span className="ml-2 text-small text-mute-2">
-                  × {order.quantity}
-                </span>
-              </p>
-              <p className="text-base font-semibold">
-                {formatKRW(order.amount)}
-              </p>
-            </div>
+            {order.items && order.items.length > 0 ? (
+              <div className="mt-2 space-y-1.5">
+                {order.items.map((it, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <p className="text-base">
+                      {it.product_name}
+                      {it.variant_label ? ` (${it.variant_label})` : ""}
+                      <span className="ml-2 text-small text-mute-2">
+                        × {it.quantity}
+                      </span>
+                    </p>
+                    <p className="text-small text-mute-1">
+                      {formatKRW(it.line_total)}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between border-t border-line pt-1.5">
+                  <p className="text-small text-mute-2">합계</p>
+                  <p className="text-base font-semibold">
+                    {formatKRW(order.amount)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-base">
+                  {order.product?.name ?? order.product_id}
+                  <span className="ml-2 text-small text-mute-2">
+                    × {order.quantity}
+                  </span>
+                </p>
+                <p className="text-base font-semibold">
+                  {formatKRW(order.amount)}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 border-t border-line pt-4">

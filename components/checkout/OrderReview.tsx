@@ -27,7 +27,7 @@ export function OrderReview() {
       <ul className="mt-5 space-y-3 divide-y divide-line">
         {items.map((it) => (
           <li
-            key={it.productId}
+            key={`${it.productId}::${it.variantId ?? ""}`}
             className="flex gap-3 pt-3 first:pt-0 text-sm"
           >
             <div className="w-12 h-12 shrink-0 bg-secondary rounded overflow-hidden flex items-center justify-center text-[10px] text-mute-2">

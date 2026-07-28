@@ -80,7 +80,6 @@ export default function CheckoutPage() {
     items.length === 1
       ? items[0].name
       : `${items[0].name} 외 ${items.length - 1}건`;
-  const firstItem = items[0];
   const ready = isFormReady(address);
   const orderInfo = {
     orderId,
@@ -88,9 +87,12 @@ export default function CheckoutPage() {
     customerName: address.name || "구매자",
     customerEmail: address.email || undefined,
     customerMobilePhone: address.phone.replace(/-/g, "") || undefined,
-    productId: firstItem.productId,
-    variantId: firstItem.variantId ?? null,
-    quantity: firstItem.quantity,
+    // P0 — 전체 라인 전달. 가격/합계는 서버가 재계산하므로 보내지 않는다.
+    lines: items.map((i) => ({
+      productId: i.productId,
+      variantId: i.variantId ?? null,
+      quantity: i.quantity,
+    })),
     ship: {
       zipcode: address.zipcode,
       address1: address.address1,

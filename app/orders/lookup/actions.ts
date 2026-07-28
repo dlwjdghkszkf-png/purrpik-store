@@ -6,10 +6,20 @@ import type { Database } from "@/lib/supabase/types";
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"];
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
+export interface LookupOrderItem {
+  product_name: string;
+  variant_label: string | null;
+  quantity: number;
+  line_total: number;
+}
+
 export interface LookupResult {
   ok: boolean;
   error?: string;
-  order?: OrderRow & { product?: Pick<ProductRow, "id" | "name"> | null };
+  order?: OrderRow & {
+    product?: Pick<ProductRow, "id" | "name"> | null;
+    items?: LookupOrderItem[];
+  };
 }
 
 function normalizePhone(p: string): string {
@@ -80,7 +90,16 @@ export async function lookupOrder(formData: FormData): Promise<LookupResult> {
       product = p ?? null;
     }
 
-    return { ok: true, order: { ...data, product } };
+    // P0-2 — 라인 상세 (구주문엔 없을 수 있음 → 헤더 표시로 fallback)
+    let items: LookupOrderItem[] = [];
+    const { data: itemRows } = await supabase
+      .from("order_items")
+      .select("product_name, variant_label, quantity, line_total")
+      .eq("order_id", data.id)
+      .order("created_at", { ascending: true });
+    items = itemRows ?? [];
+
+    return { ok: true, order: { ...data, product, items } };
   } catch (e) {
     console.warn("[lookupOrder] exception:", (e as Error).message);
     return { ok: false, error: "주문 조회 중 오류가 발생했습니다." };
