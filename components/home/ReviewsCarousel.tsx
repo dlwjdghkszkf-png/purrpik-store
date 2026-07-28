@@ -1,28 +1,6 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
-
-type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
-
-async function fetchReviews(): Promise<ReviewRow[]> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("reviews")
-      .select("*")
-      .order("display_order", { ascending: false })
-      .limit(8);
-    if (error) {
-      console.warn("[ReviewsCarousel] reviews fetch error:", error.message);
-      return [];
-    }
-    return data ?? [];
-  } catch (e) {
-    console.warn("[ReviewsCarousel] supabase unavailable:", (e as Error).message);
-    return [];
-  }
-}
+import { getReviews } from "@/lib/products/catalog";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -43,7 +21,8 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export async function ReviewsCarousel() {
-  const reviews = await fetchReviews();
+  // P2-2: 캐시 + 재시도 로더. 홈은 상위 8개.
+  const reviews = (await getReviews()).slice(0, 8);
 
   return (
     <section className="py-16 md:py-24">

@@ -53,7 +53,7 @@ export function FaqClient({ faqs }: { faqs: FaqRow[] }) {
 
   return (
     <>
-      <div className="container-page sticky top-0 z-10 bg-bg pb-3 pt-2">
+      <div className="container-page sticky top-16 z-10 bg-bg pb-3 pt-2">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => {

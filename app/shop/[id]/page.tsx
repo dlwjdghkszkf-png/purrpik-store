@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { parseVariants } from "@/lib/products/format";
 import { Gallery } from "@/components/pdp/Gallery";
@@ -11,7 +10,11 @@ import { SpecTable } from "@/components/pdp/SpecTable";
 import { Layer4Section } from "@/components/pdp/Layer4Section";
 import { ProductDetailImages } from "@/components/pdp/ProductDetailImages";
 import { getProductDetail } from "@/lib/product-detail";
-import { getMasterProductById } from "@/lib/products/catalog";
+import {
+  getMasterProductById,
+  getReviews,
+  getFaqs,
+} from "@/lib/products/catalog";
 import { ReviewsSection } from "@/components/pdp/ReviewsSection";
 import { ReviewsHero } from "@/components/pdp/ReviewsHero";
 import { FaqSection } from "@/components/pdp/FaqSection";
@@ -23,9 +26,10 @@ type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
 // Stage 18 — 마스터 1개 + 4 legacy SKU id (redirect용).
+// P2-4: 유효 상품 판단은 DB 조회 결과로 한다 — 여기 하드코딩 목록에 없으면
+//       새 상품을 DB에 추가해도 404가 되던 문제. legacy redirect 목록만 코드 유지.
 const MASTER_ID = "purrpik-shelter";
 const LEGACY_IDS = ["basic-m", "basic-l", "allinone-m", "allinone-l"] as const;
-const VALID_MASTER_IDS = [MASTER_ID, "purrpik-coolmat"] as const;
 
 // force-dynamic: cookies() 사용한 createClient 때문에 prerender 시 fail → notFound 캐시되는 문제 회피.
 export const dynamic = "force-dynamic";
@@ -41,46 +45,17 @@ function fetchMasterProduct(id: string): Promise<ProductRow | null> {
 async function fetchReviews(
   productId: string,
 ): Promise<{ reviews: ReviewRow[]; total: number }> {
-  try {
-    const supabase = await createClient();
-    // 표시용 상위 14개 + 정확한 전체 개수(count: exact).
-    const { data, error, count } = await supabase
-      .from("reviews")
-      .select("*", { count: "exact" })
-      .eq("product_id", productId)
-      .order("display_order", { ascending: false })
-      .limit(14);
-    if (error) {
-      console.warn(`[/shop/${productId}] reviews fetch error:`, error.message);
-      return { reviews: [], total: 0 };
-    }
-    return { reviews: data ?? [], total: count ?? (data?.length ?? 0) };
-  } catch (e) {
-    console.warn(
-      `[/shop/${productId}] reviews supabase unavailable:`,
-      (e as Error).message,
-    );
-    return { reviews: [], total: 0 };
-  }
+  // P2-2: 캐시 + 재시도 로더. 전체를 받아 total 산정 후 상위 14개 표시.
+  const all = await getReviews(productId);
+  return { reviews: all.slice(0, 14), total: all.length };
 }
 
 async function fetchProductFaqs(): Promise<FaqRow[]> {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("faqs")
-      .select("*")
-      .eq("category", "제품")
-      .eq("active", true)
-      .order("display_order", { ascending: true });
-    if (error) {
-      console.warn("[/shop/[id]] faqs fetch error:", error.message);
-      return [];
-    }
-    return data ?? [];
+    return await getFaqs("제품");
   } catch (e) {
     console.warn(
-      "[/shop/[id]] faqs supabase unavailable:",
+      "[/shop/[id]] faqs unavailable:",
       (e as Error).message,
     );
     return [];
@@ -141,10 +116,6 @@ export default async function ProductPage({
     redirect(`/shop/${MASTER_ID}?sku=${id}`);
   }
 
-  if (!VALID_MASTER_IDS.includes(id as (typeof VALID_MASTER_IDS)[number])) {
-    notFound();
-  }
-
   const [product, reviewsData, faqs] = await Promise.all([
     fetchMasterProduct(id),
     fetchReviews(id),
@@ -152,6 +123,7 @@ export default async function ProductPage({
   ]);
   const { reviews, total: reviewTotal } = reviewsData;
 
+  // 조회 성공 + 미존재(active master 아님)만 404. 조회 실패는 fetchMasterProduct가 throw.
   if (!product) {
     notFound();
   }

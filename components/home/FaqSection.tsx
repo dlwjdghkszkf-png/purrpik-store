@@ -5,33 +5,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
-
-type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
-
-async function fetchFaqs(): Promise<FaqRow[]> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("faqs")
-      .select("*")
-      .eq("active", true)
-      .order("display_order", { ascending: true })
-      .limit(5);
-    if (error) {
-      console.warn("[FaqSection] faqs fetch error:", error.message);
-      return [];
-    }
-    return data ?? [];
-  } catch (e) {
-    console.warn("[FaqSection] supabase unavailable:", (e as Error).message);
-    return [];
-  }
-}
+import { getFaqs } from "@/lib/products/catalog";
 
 export async function FaqSection() {
-  const faqs = await fetchFaqs();
+  // P2-2: 캐시 + 재시도 로더. 홈은 상위 5개만 노출.
+  const faqs = (await getFaqs()).slice(0, 5);
 
   return (
     <section className="container-page py-16 md:py-24">

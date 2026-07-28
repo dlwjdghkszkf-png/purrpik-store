@@ -89,7 +89,7 @@ export function MegaMenu() {
   return (
     <>
       {/* 모바일 햄버거 */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger
             aria-label="메뉴 열기"
@@ -177,7 +177,7 @@ export function MegaMenu() {
 
       {/* 데스크탑 네비게이션 */}
       <nav
-        className="hidden md:flex items-center gap-8"
+        className="hidden lg:flex items-center gap-8"
         onMouseLeave={() => setHovered(null)}
       >
         {NAV.map((item) => (

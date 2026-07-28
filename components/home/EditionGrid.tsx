@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { getMasterProducts } from "@/lib/products/catalog";
 import {
   editionLabel,
   formatPrice,
@@ -18,23 +18,14 @@ type ProductRow = Database["public"]["Tables"]["products"]["Row"];
  *
  * 데이터: products WHERE is_master AND active=true LIMIT 1 + variants(JSONB).
  */
+// P2-2: 공개 캐시 로더 재사용(순단 시 재시도 + 24h 캐시). 홈은 부분 실패해도
+// 페이지가 죽으면 안 되므로 여기서만 예외를 삼켜 fallback UI로 떨어진다.
 async function fetchMasterProduct(): Promise<ProductRow | null> {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("active", true)
-      .eq("is_master", true)
-      .order("display_order", { ascending: true })
-      .limit(1);
-    if (error) {
-      console.warn("[EditionGrid] master fetch error:", error.message);
-      return null;
-    }
-    return data?.[0] ?? null;
+    const all = await getMasterProducts();
+    return all[0] ?? null;
   } catch (e) {
-    console.warn("[EditionGrid] supabase unavailable:", (e as Error).message);
+    console.warn("[EditionGrid] catalog unavailable:", (e as Error).message);
     return null;
   }
 }

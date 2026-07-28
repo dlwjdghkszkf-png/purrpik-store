@@ -5,6 +5,8 @@ import { createPublicClient, queryWithRetry } from "@/lib/supabase/public";
 import type { Database } from "@/lib/supabase/types";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
+type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
+type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
 /**
  * 활성 마스터 상품 전체. 카탈로그가 작아 필터는 메모리에서 적용.
@@ -56,4 +58,53 @@ export const getMasterProductById = unstable_cache(
   },
   ["public-master-product-v1"],
   { revalidate: 86400, tags: ["products"] },
+);
+
+/**
+ * 리뷰 목록. productId 있으면 해당 상품, 없으면 전체.
+ * P2-2: 캐시 + 재시도로 순단 방어. 리뷰는 없어도 페이지가 유효하므로
+ *  최종 실패 시 throw하지 않고 []를 반환하되(호출부가 error boundary를 원치 않음)
+ *  재시도로 일시 순단은 걸러낸다.
+ */
+export const getReviews = unstable_cache(
+  async (productId?: string): Promise<ReviewRow[]> => {
+    const { data, error } = await queryWithRetry<ReviewRow[]>(() => {
+      let q = createPublicClient()
+        .from("reviews")
+        .select("*")
+        .order("display_order", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (productId) q = q.eq("product_id", productId);
+      return q;
+    });
+    if (error) {
+      console.error(`[catalog] reviews fetch failed: ${error.message}`);
+      return [];
+    }
+    return data ?? [];
+  },
+  ["public-reviews-v1"],
+  { revalidate: 3600, tags: ["reviews"] },
+);
+
+/** 활성 FAQ (카테고리 옵션). P2-2: 캐시 + 재시도. */
+export const getFaqs = unstable_cache(
+  async (category?: string): Promise<FaqRow[]> => {
+    const { data, error } = await queryWithRetry<FaqRow[]>(() => {
+      let q = createPublicClient()
+        .from("faqs")
+        .select("*")
+        .eq("active", true)
+        .order("display_order", { ascending: true });
+      if (category) q = q.eq("category", category as FaqRow["category"]);
+      return q;
+    });
+    if (error) {
+      console.error(`[catalog] faqs fetch failed: ${error.message}`);
+      return [];
+    }
+    return data ?? [];
+  },
+  ["public-faqs-v1"],
+  { revalidate: 86400, tags: ["faqs"] },
 );

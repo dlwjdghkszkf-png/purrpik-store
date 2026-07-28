@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
+import { getFaqs } from "@/lib/products/catalog";
 import { FaqClient } from "./FaqClient";
-
-type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
@@ -15,27 +12,8 @@ export const metadata: Metadata = {
 // 24h ISR.
 export const revalidate = 86400;
 
-async function fetchFaqs(): Promise<FaqRow[]> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("faqs")
-      .select("*")
-      .eq("active", true)
-      .order("display_order", { ascending: true });
-    if (error) {
-      console.warn("[/faq] faqs fetch error:", error.message);
-      return [];
-    }
-    return data ?? [];
-  } catch (e) {
-    console.warn("[/faq] supabase unavailable:", (e as Error).message);
-    return [];
-  }
-}
-
 export default async function FaqPage() {
-  const faqs = await fetchFaqs();
+  const faqs = await getFaqs();
 
   return (
     <>

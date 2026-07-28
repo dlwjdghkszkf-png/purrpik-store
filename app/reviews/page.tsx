@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Star } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
-
-type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
+import { getReviews } from "@/lib/products/catalog";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/reviews" },
@@ -24,30 +21,8 @@ interface SearchParams {
   filter?: FilterMode;
 }
 
-async function fetchReviews(
-  productId?: string,
-): Promise<ReviewRow[]> {
-  try {
-    const supabase = await createClient();
-    let q = supabase
-      .from("reviews")
-      .select("*")
-      .order("display_order", { ascending: false })
-      .order("created_at", { ascending: false });
-    if (productId) {
-      q = q.eq("product_id", productId);
-    }
-    const { data, error } = await q;
-    if (error) {
-      console.warn("[/reviews] reviews fetch error:", error.message);
-      return [];
-    }
-    return data ?? [];
-  } catch (e) {
-    console.warn("[/reviews] supabase unavailable:", (e as Error).message);
-    return [];
-  }
-}
+// P2-2: 캐시 + 재시도 로더 사용.
+const fetchReviews = (productId?: string) => getReviews(productId);
 
 function Stars({ rating }: { rating: number }) {
   return (
