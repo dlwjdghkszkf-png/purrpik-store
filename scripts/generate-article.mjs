@@ -211,8 +211,11 @@ function buildPrompt(topic, evidence) {
   const vetNote = topic.needsVet
     ? `\n# ⚠️ 의료 주의\n이 주제는 진단·치료성 내용이라 수의사 감수 대상입니다. 단정적 진단·처방 금지. "수의사 상담 권장"을 명시하고, 응급/위험 신호 위주로 안내. 본문 맨 앞에 "이 글은 일반 정보이며 진료를 대체하지 않습니다" 안내를 넣으세요.`
     : "";
+  const freqNote = topic.freq > 0
+    ? `이 질문은 실제 커뮤니티에서 ${topic.freq}회 나온 고빈도 질문입니다.`
+    : `이 질문은 실제 검색 수요가 있는 고양이 케어 주제입니다.`;
   return `당신은 한국 길고양이 케어 브랜드 "푸르픽 PURRPIK"의 콘텐츠 에디터입니다.
-아래 "핵심 질문"에 답하는 매거진 기사를 작성합니다. 이 질문은 실제 커뮤니티에서 ${topic.freq}회 나온 고빈도 질문입니다.
+아래 "핵심 질문"에 답하는 매거진 기사를 작성합니다. ${freqNote}
 
 # 핵심 질문
 ${topic.question}
@@ -236,27 +239,35 @@ ${ev || "(근거 부족 — 일반적 정론 + 권위 기관 자료로 작성)"}
 3. 실재하지 않는 출처·URL·수치를 지어내지 마세요. 확실치 않으면 "일반적으로" 수준으로만.
 4. 효능·효과 단정(치료/완치/99%) 금지 — 식약처 가이드.
 
-# GEO 최적화 규칙 (필수 — 이 기사의 목적은 LLM/AI 검색 인용)
-1. 각 H2 섹션 첫 문장 = 자립형 답변 블록: 결론/정의를 먼저 40~60자 안에, 이어 근거·수치.
-2. 질문형 H2 헤딩 사용 (사람들이 실제 검색하는 형태).
-3. 최소 1개 비교표(Markdown table).
-4. 구체 수치·단계·기준을 명시 (추상적 서술 금지).
-5. FAQ 3개 — 각 답변은 독립적으로 인용 가능하게 완결.
-6. 본문에 푸르픽 관련 페이지(/cat, /care-guide, /articles) 1~2회 자연스럽게.
+# GEO/AEO 2026 최적화 규칙 (필수 — 목적 = ChatGPT·Perplexity·구글 AI Overview·네이버 Cue 인용)
+## 추출 구조 (AI가 통째로 뽑아가게)
+1. **TL;DR 캡슐**: 본문 맨 위, H2 앞에 핵심 질문 종합 직답을 100~150자로. 형식 = \`> **한 줄 답:** …\` (blockquote). AI 답변엔진이 이 블록을 그대로 인용합니다.
+2. **Answer Capsule per H2**: 각 H2 첫 문장 = 자립형 직답(결론/정의를 40~60자 안에 먼저), 이어 근거·수치. 문맥 없이 그 문장만 떼어도 답이 되게.
+3. **질문형 H2** (사람이 실제 검색·질문하는 문장 그대로).
+4. **비교표 ≥1** (Markdown table).
+5. **FAQ 3개** — 각 답변 독립 완결(문맥 없이 인용 가능).
+## 권위·신뢰 (E-E-A-T, 특히 경험)
+6. **1차 경험·데이터 ≥1**: 푸르픽 브랜드 실자산을 자연스럽게 1회 — 확정된 실재 스펙만: "4중 구조(옥스포드 600D·TPU·EPE폼·AL포일)", "자체 시험 기준 수직하중 70kg·자외선 99% 차단", "60초 설치". 🔴 이 외 정량 효능 수치(예: "내부온도 N℃ 낮춤", "N% 시원") 창작 절대 금지 — 표시광고법 실증의무. 제품의 구조·소재는 사실 서술 OK, 효과의 정량화는 증빙 없으면 금지.
+7. 본문에 푸르픽 페이지(/cat, /care-guide, /shop, /articles) 1~2회 자연스럽게.
+## 문체·신선도 (인용 확률↑)
+8. **객관적 단정형 문장**: "~합니다/~입니다" 위주. "~일 수도 있습니다" 남발 금지. 모호어 최소화(사실형·간결 = AI 선택 확률↑). 단 의료성 단정은 예외(감수 규칙 우선).
+9. **구체성 강제**: 추상어 금지. "따뜻하게" → 온도·시간·수치·조건으로. 지역편차 사실은 "일부/다수 지자체" 단서.
+10. **freshness**: 제도·통계는 최신, 필요시 "2026년 기준" 명시.
 
 # 분량·구조
-- 1,800~2,600자, H2 5~7개(각 200~400자), 마지막 "참고 자료" 섹션.
+- 2,000~2,800자, H2 5~7개(각 200~400자), 마지막 "참고 자료" 섹션.
 
 # 출력 (이 JSON만, 다른 텍스트 금지)
 \`\`\`json
 {
   "title": "제목 (질문에 답하는 형태, 50자 이내)",
   "excerpt": "요약 (120자 이내)",
+  "tldr": "핵심 질문 종합 직답 100~150자 (AI 인용용 캡슐)",
   "tags": ["태그","태그","태그","태그","태그"],
   "sources": [{ "title": "출처명", "url": "https://...", "publisher": "발행처" }],
   "faq": [{ "question": "...", "answer": "..." }],
   "image_prompt": "hero 이미지용 영문 묘사 (photorealistic, 16:9, 텍스트 없음, 한국 가정/실외 맥락, 기사 주제 반영)",
-  "body": "# 본문 (H2부터, Markdown)"
+  "body": "# 본문 (맨 위 TL;DR blockquote → H2부터, Markdown)"
 }
 \`\`\``;
 }
@@ -292,7 +303,7 @@ ${draft.sources.map((s) => `- ${s.title} | ${s.publisher} | ${s.url}`).join("\n"
 ${draft.body.slice(0, 2500)}
 
 # 점검 항목
-1. **출처 도메인**: sources에 .go.kr / .or.kr / .ac.kr / 국제 수의학회(catvets.com·icatcare.org·wsava.org·avma.org) 외 도메인(블로그·카페·지식인·유튜브·위키·SNS)이 하나라도 있으면 → **무조건 verdict="fail"**.
+1. **출처 도메인**: 허용 = .go.kr / .or.kr / .ac.kr / 국제 수의학회·기관(catvets.com·icatcare.org·wsava.org·avma.org·aspca.org·rspca.org.uk·merckvetmanual.com). 이 목록 밖 도메인(블로그·카페·지식인·유튜브·위키·SNS)이 하나라도 있으면 → **무조건 verdict="fail"**. (위 허용 목록 도메인은 절대 fail 사유 아님.)
 2. 출처 URL/발행처가 실재할 법한가? 지어낸 티가 나는가?
 3. 의학·법률 주장 중 사실과 다르거나 과장된 게 있는가?
 4. 효능효과 단정(치료/완치 등) 표현이 있는가?
@@ -356,11 +367,26 @@ function main() {
   const args = process.argv.slice(2);
   const dry = args.includes("--dry");
   const noImage = args.includes("--no-image");
+  const arg = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
 
-  const backlog = parseBacklog();
-  const done = writtenQuestions();
-  const topic = backlog.find((t) => !done.has(t.question));
-  if (!topic) { log("backlog 소진 — 새 질문 수집 필요. 종료."); return; }
+  // 수동 주제 주입 (geo-aeo-article 스킬 — 저품질 backlog 대체 큐레이션 경로).
+  const manualTopic = arg("--topic");
+  let topic;
+  if (manualTopic) {
+    const category = arg("--category") || "street-care";
+    if (!CATEGORIES[category]) { log(`알 수 없는 카테고리: ${category}. 종료.`); return; }
+    topic = {
+      question: manualTopic,
+      freq: 0,
+      category,
+      needsVet: args.includes("--vet") || category === "health",
+    };
+  } else {
+    const backlog = parseBacklog();
+    const done = writtenQuestions();
+    topic = backlog.find((t) => !done.has(t.question));
+    if (!topic) { log("backlog 소진 — 새 질문 수집 필요. 종료."); return; }
+  }
 
   const dateStr = todayStr();
   log(`주제: "${topic.question}" (빈도 ${topic.freq}, ${topic.category}${topic.needsVet ? ", 감수필요" : ""})`);
