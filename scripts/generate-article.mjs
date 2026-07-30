@@ -85,6 +85,33 @@ function parseBacklog() {
   return rows.sort((a, b) => b.freq - a.freq);
 }
 
+// topic-bank.md fallback 파서 — 저품질 raw backlog 소진 시 큐레이션 주제 사용.
+// 형식: `## <category> (설명)` 헤딩 아래 `- <이모지> 질문? *(비고)*` 라인.
+function parseTopicBank() {
+  const p = path.join(REPO, "scripts", "topic-bank.md");
+  if (!existsSync(p)) return [];
+  const md = readFileSync(p, "utf8");
+  const rows = [];
+  let cat = "street-care";
+  for (const line of md.split("\n")) {
+    const h = line.match(/^##\s+([a-z-]+)/); // "## health (건강) ..." → health
+    if (h && CATEGORIES[h[1]]) { cat = h[1]; continue; }
+    // 발행 로그 섹션은 스킵.
+    if (line.includes("발행 로그")) break;
+    const m = line.match(/^-\s+(.+)/);
+    if (!m) continue;
+    // 이모지·계절마커 제거 후 질문 추출, 끝 *(비고)* 제거.
+    let q = m[1]
+      .replace(/\*\([^)]*\)\*/g, "")
+      .replace(/[🌞🍂❄️🌱⭐]/gu, "")
+      .replace(/\s*\*[^*]*\*\s*$/, "")
+      .trim();
+    if (!q || !q.includes("?")) continue; // 질문형만
+    rows.push({ question: q, freq: 0, category: cat, needsVet: cat === "health" });
+  }
+  return rows;
+}
+
 // 이미 작성된 질문(frontmatter source_backlog) 수집.
 function writtenQuestions() {
   const done = new Set();
@@ -209,7 +236,11 @@ function buildPrompt(topic, evidence) {
   const catLabel = CATEGORIES[topic.category];
   const ev = evidence.map((e, i) => `[${i + 1}] (${e.source}) ${e.title}\n    ${(e.snippet || "").slice(0, 200)}\n    ${e.url}`).join("\n");
   const vetNote = topic.needsVet
-    ? `\n# ⚠️ 의료 주의\n이 주제는 진단·치료성 내용이라 수의사 감수 대상입니다. 단정적 진단·처방 금지. "수의사 상담 권장"을 명시하고, 응급/위험 신호 위주로 안내. 본문 맨 앞에 "이 글은 일반 정보이며 진료를 대체하지 않습니다" 안내를 넣으세요.`
+    ? `\n# ⚠️ 의료 주의 (health — 정확성 최우선)
+- 진단·치료성 내용이라 수의사 감수 대상. 단정적 진단·처방 금지. "수의사 상담 권장" 명시. 응급/위험 신호 위주. 본문 맨 앞 "이 글은 일반 정보이며 진료를 대체하지 않습니다" 고지.
+- 🔴 **증상 과소평가 금지**: 구토·헛구역질·설사·식욕부진은 "흔하니 대부분 정상"으로 프레이밍하지 말 것. 최신 수의 컨센서스(ISFM/AAFP)는 "고양이 구토는 빈도·헤어볼 동반 여부와 무관하게 정상이 아니다"가 핵심. 반복·지속 시 진료 필요를 분명히.
+- 🔴 **제품 삽입 금지**: health 기사에는 푸르픽 제품 스펙(70kg·자외선99% 등)을 본문에 넣지 마세요. 순수 의학 정보만. E-E-A-T는 제품이 아니라 수의 가이드라인(ISFM·AAFP·Merck·iCatCare) 인용으로 확보. 내부링크는 /care-guide 1회만 허용.
+- 발행처 정확 표기: International Cat Care(iCatCare)는 수의학회가 아니라 고양이 복지 단체입니다. "국제고양이수의학회"로 쓰지 마세요.`
     : "";
   const freqNote = topic.freq > 0
     ? `이 질문은 실제 커뮤니티에서 ${topic.freq}회 나온 고빈도 질문입니다.`
@@ -247,7 +278,7 @@ ${ev || "(근거 부족 — 일반적 정론 + 권위 기관 자료로 작성)"}
 4. **비교표 ≥1** (Markdown table).
 5. **FAQ 3개** — 각 답변 독립 완결(문맥 없이 인용 가능).
 ## 권위·신뢰 (E-E-A-T, 특히 경험)
-6. **1차 경험·데이터 ≥1**: 푸르픽 브랜드 실자산을 자연스럽게 1회 — 확정된 실재 스펙만: "4중 구조(옥스포드 600D·TPU·EPE폼·AL포일)", "자체 시험 기준 수직하중 70kg·자외선 99% 차단", "60초 설치". 🔴 이 외 정량 효능 수치(예: "내부온도 N℃ 낮춤", "N% 시원") 창작 절대 금지 — 표시광고법 실증의무. 제품의 구조·소재는 사실 서술 OK, 효과의 정량화는 증빙 없으면 금지.
+6. **1차 경험·데이터 ≥1** (⚠️ health/감수 주제는 예외 — 위 "의료 주의"의 제품 삽입 금지가 우선. 아래는 비-health 카테고리에만 적용): 푸르픽 브랜드 실자산을 자연스럽게 1회 — 확정된 실재 스펙만: "4중 구조(옥스포드 600D·TPU·EPE폼·AL포일)", "자체 시험 기준 수직하중 70kg·자외선 99% 차단", "60초 설치". 🔴 이 외 정량 효능 수치(예: "내부온도 N℃ 낮춤", "N% 시원") 창작 절대 금지 — 표시광고법 실증의무. 제품의 구조·소재는 사실 서술 OK, 효과의 정량화는 증빙 없으면 금지.
 7. 본문에 푸르픽 페이지(/cat, /care-guide, /shop, /articles) 1~2회 자연스럽게.
 ## 문체·신선도 (인용 확률↑)
 8. **객관적 단정형 문장**: "~합니다/~입니다" 위주. "~일 수도 있습니다" 남발 금지. 모호어 최소화(사실형·간결 = AI 선택 확률↑). 단 의료성 단정은 예외(감수 규칙 우선).
@@ -382,10 +413,16 @@ function main() {
       needsVet: args.includes("--vet") || category === "health",
     };
   } else {
-    const backlog = parseBacklog();
     const done = writtenQuestions();
+    let backlog = [];
+    try { backlog = parseBacklog(); } catch (e) { log(`backlog 파싱 실패: ${e.message}`); }
     topic = backlog.find((t) => !done.has(t.question));
-    if (!topic) { log("backlog 소진 — 새 질문 수집 필요. 종료."); return; }
+    if (!topic) {
+      // 저품질/소진된 raw backlog 대체 — 큐레이션 topic-bank fallback.
+      topic = parseTopicBank().find((t) => !done.has(t.question));
+      if (topic) log(`backlog 소진 → topic-bank 주제 선택: "${topic.question}"`);
+    }
+    if (!topic) { log("backlog + topic-bank 모두 소진 — 새 주제 필요. 종료."); return; }
   }
 
   const dateStr = todayStr();
@@ -416,7 +453,8 @@ function main() {
 
   // worktree
   git(["fetch", "origin", "main"]);
-  const branch = `article/${dateStr}-${topic.category}`;
+  // slug 포함 — 같은 날 같은 카테고리 다편 발행 시 브랜치 충돌(force-push 덮어씀) 방지.
+  const branch = `article/${dateStr}-${topic.category}-${slug.slice(0, 24)}`;
   const wt = mkdtempSync(path.join(tmpdir(), "purrpik-article-"));
   try {
     git(["worktree", "add", "-B", branch, wt, "origin/main"]);
